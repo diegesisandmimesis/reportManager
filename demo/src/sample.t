@@ -21,29 +21,74 @@
 
 #include "reportManager.h"
 
-versionInfo: GameID
-        name = 'reportManager Library Demo Game'
-        byline = 'Diegesis & Mimesis'
-        desc = 'Demo game for the reportManager library. '
-        version = '1.0'
-        IFID = '12345'
-	showAbout() {
-		"This is a simple test game that demonstrates the features
-		of the reportManager library.
-		<.p>
-		Consult the README.txt document distributed with the library
-		source for a quick summary of how to use the library in your
-		own games.
-		<.p>
-		The library source is also extensively commented in a way
-		intended to make it as readable as possible. ";
+versionInfo: GameID;
+gameMain: GameMainDef initialPlayerChar = me;
+
+// Our report manager.  All it does is summarize the >EXAMINE command on
+// the balls.
+ballReportManager: ReportManager
+	// Replacement for the stock ReportManager method.  This is
+	// the entry point for our custom report logic.
+	summarizeReport(vec, txt) {
+		// All we do is summarize >EXAMINE actions on more than on
+		// ball.
+		summarizeExamines(txt);
+	}
+
+	// Summarize the examines.  The argument is a StringBuffer we
+	// can add things to.
+	summarizeExamines(txt) {
+		local l;
+
+		// If we don't remember examining any balls this turn,
+		// we have nothing to summarize.
+		if((l = getReportData('examine')) == nil)
+			return;
+
+		// Append a summary of the objects examined.
+		txt.append('It\'s <<objectLister.makeSimpleList(l)>>. ');
 	}
 ;
-gameMain: GameMainDef
-	initialPlayerChar = me
-	inlineCommand(cmd) { "<b>&gt;<<toString(cmd).toUpper()>></b>"; }
-	printCommand(cmd) { "<.p>\n\t<<inlineCommand(cmd)>><.p> "; }
+
+// A class for the objects we're going to summarize.
+// The only interesting thing about the class is that the objects are
+// identical except for their color.
+class Ball: Thing 'ball*balls' 'ball'
+	"A <<color>> ball. "
+
+	// The color property.  Needs to be a single-quoted string.
+	color = nil
+
+	// Set up each Ball instance at the start of the game.  We need to
+	// do this to handle the per-color vocabulary.
+	initializeThing() {
+		inherited();
+		setColor();
+	}
+
+	// Tweak the vocabulary to reflect the ball's color.
+	setColor() {
+		if(color == nil)
+			color = 'colorless';
+		cmdDict.addWord(self, color, &adjective);
+		name = '<<color>> ball';
+	}
+
+	// Hook for the report manager.
+	dobjFor(Examine) {
+		action() {
+			// Do whatever we'd do normally.
+			inherited();
+
+			// Ping the report manager.
+			ballReportManager.rememberReportData('examine', self);
+		}
+	}
 ;
 
 startRoom: Room 'Void' "This is a featureless void.";
 +me: Person;
+// A bunch of ball instances.
++redBall: Ball color = 'red';
++greenBall: Ball color = 'green';
++blueBall: Ball color = 'blue';
