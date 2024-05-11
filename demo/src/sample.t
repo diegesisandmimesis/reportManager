@@ -27,12 +27,18 @@ gameMain: GameMainDef initialPlayerChar = me;
 // Our report manager.  All it does is summarize the >EXAMINE command on
 // the balls.
 ballReportManager: ReportManager
+	reportManagerActions = static [ ExamineAction, SmellAction ]
+
+	reportManagerAnnounceText = 'balls'
+
 	// Replacement for the stock ReportManager method.  This is
 	// the entry point for our custom report logic.
-	summarizeReport(vec, txt) {
-		// All we do is summarize >EXAMINE actions on more than on
-		// ball.
-		summarizeExamines(txt);
+	summarizeReport(act, vec, txt) {
+		// All we do is summarize >EXAMINE actions.
+		if(act.ofKind(ExamineAction))
+			summarizeExamines(txt);
+		if(act.ofKind(SmellAction))
+			summarizeSmells(txt);
 	}
 
 	// Summarize the examines.  The argument is a StringBuffer we
@@ -42,11 +48,23 @@ ballReportManager: ReportManager
 
 		// If we don't remember examining any balls this turn,
 		// we have nothing to summarize.
-		if((l = getReportData('examine')) == nil)
+		if((l = getReportObjects()) == nil)
 			return;
 
 		// Append a summary of the objects examined.
 		txt.append('It\'s <<objectLister.makeSimpleList(l)>>. ');
+	}
+
+	summarizeSmells(txt) {
+		if(getReportObjects() == nil)
+			return;
+
+		txt.append('They all smell the same. ');
+	}
+
+	// We only want to summarize reports involving balls.
+	checkReport(report) {
+		return((report.dobj_ != nil) && report.dobj_.ofKind(Ball));
 	}
 ;
 
@@ -55,6 +73,8 @@ ballReportManager: ReportManager
 // identical except for their color.
 class Ball: Thing 'ball*balls' 'ball'
 	"A <<color>> ball. "
+
+	reportManager = ballReportManager
 
 	// The color property.  Needs to be a single-quoted string.
 	color = nil
@@ -73,22 +93,12 @@ class Ball: Thing 'ball*balls' 'ball'
 		cmdDict.addWord(self, color, &adjective);
 		name = '<<color>> ball';
 	}
-
-	// Hook for the report manager.
-	dobjFor(Examine) {
-		action() {
-			// Do whatever we'd do normally.
-			inherited();
-
-			// Ping the report manager.
-			ballReportManager.rememberReportData('examine', self);
-		}
-	}
 ;
 
 startRoom: Room 'Void' "This is a featureless void.";
 +me: Person;
 // A bunch of ball instances.
++pebble: Thing '(small) (round) pebble' 'pebble' "A small, round pebble. ";
 +redBall: Ball color = 'red';
 +greenBall: Ball color = 'green';
 +blueBall: Ball color = 'blue';
