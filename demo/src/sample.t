@@ -64,7 +64,7 @@ ballReportManager: ReportManager
 
 	// We only want to summarize reports involving balls.
 	checkReport(report) {
-		return((report.dobj_ != nil) && report.dobj_.ofKind(Ball));
+		return(gReportObjectOfKind(report, Ball));
 	}
 ;
 

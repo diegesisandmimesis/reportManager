@@ -50,7 +50,7 @@
 //			a list of the actions the report manager will
 //			handle.  example:
 //
-//			reportManagerActions = static [ Examine action ]
+//			reportManagerActions = static [ ExamineAction ]
 //
 //		checkReport(report)
 //			a method that accepts a report instance as its
