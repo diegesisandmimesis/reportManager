@@ -28,12 +28,9 @@ gameMain: GameMainDef initialPlayerChar = me;
 // the balls.
 ballReportManager: ReportManager
 	reportManagerFor = Ball
-
 	reportManagerAnnounceText = 'balls'
 ;
-+ReportSummary
-	action = ExamineAction
-
++ReportSummary @ExamineAction
 	// Summarize the examines.
 	summarize(vec, txt) {
 		local l;
@@ -47,9 +44,7 @@ ballReportManager: ReportManager
 		txt.append('It\'s <<objectLister.makeSimpleList(l)>>. ');
 	}
 ;
-+ReportSummary
-	action = SmellAction
-
++ReportSummary @SmellAction
 	summarize(vec, txt) {
 		if(getReportObjects(vec) == nil)
 			return;
