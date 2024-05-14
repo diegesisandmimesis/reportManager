@@ -111,7 +111,7 @@ reportManagerModuleID: ModuleID {
 }
 
 // The report manager object.
-class ReportManager: PreinitObject
+class ReportManager: object
 	// What kind of object we're a manager for
 	reportManagerFor = nil
 
@@ -134,6 +134,8 @@ class ReportManager: PreinitObject
 	// will just be listed in a line by itself).
 	reportManagerAnnounceText = nil
 
+	reportManagerDefaultSummaries = nil
+
 	// List of our summary objects.
 	_reportManagerSummary = perInstance(new Vector())
 
@@ -143,17 +145,68 @@ class ReportManager: PreinitObject
 	// methods.
 	_reportManagerReports = nil
 
-	execute() {
-		initReportManager();
+	initializeReportManager() {
+		initializeReportManagerFor();
+		initializeReportManagerDefaultSummaries();
 	}
 
-	initReportManager() {
+	// Go through all the objects we're the report manager for and
+	// make sure they know about us.
+	initializeReportManagerFor() {
 		if(reportManagerFor == nil)
 			return;
 
 		forEachInstance(reportManagerFor, function(o) {
 			o.reportManager = self;
 		});
+	}
+
+	// Check to see if there are any default summaries that we don't
+	// already have copies of.
+	initializeReportManagerDefaultSummaries() {
+		local l;
+
+		// No default summaries, nothing to do.
+		if(reportManagerDefaultSummaries == nil)
+			return;
+
+		// Make sure the list of defaults is list-ish.
+		if(!reportManagerDefaultSummaries.ofKind(Collection))
+			reportManagerDefaultSummaries
+				= [ reportManagerDefaultSummaries ];
+
+		// This will hold the summaries we need to add.
+		l = new Vector(reportManagerDefaultSummaries.length);
+
+		// Go through the list of defaults, checking to see
+		// if we already have a summary for its action.
+		reportManagerDefaultSummaries.forEach(function(o) {
+			// If we already have a summary for this
+			// action, bail.
+			if(getSummaryForAction(o.action))
+				return;
+
+			// Remember that we need to add this default.
+			l.appendUnique(o);
+		});
+
+		// Go through our list of defaults we don't have,
+		// adding them.
+		l.forEach(function(o) {
+			addReportManagerSummary(o.createInstance());
+		});
+	}
+
+	// Returns the summary for the given action, if we have one.
+	getSummaryForAction(act) {
+		local i;
+
+		for(i = 1; i <= _reportManagerSummary.length; i++) {
+			if(_reportManagerSummary[i].matchAction(act))
+				return(_reportManagerSummary[i]);
+		}
+
+		return(nil);
 	}
 
 	// Add a summary to our list.

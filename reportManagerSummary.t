@@ -8,14 +8,12 @@
 
 #include "reportManager.h"
 
-class ReportSummary: PreinitObject
+class ReportSummary: object
 	action = nil
 
 	reportManager = nil
 
-	execute() { initializeSummary(); }
-
-	initializeSummary() {
+	initializeReportSummary() {
 		if(location == nil)
 			return(nil);
 		if(location.ofKind(ReportManager)) {
@@ -41,6 +39,8 @@ class ReportSummary: PreinitObject
 	// to prepend announcement text (usually the object name with
 	// a colon) to the summary.
 	_summarize(vec, txt) {
+		if((vec == nil) || (vec.length < 1))
+			return;
 		reportManager.reportManagerAnnouncement(txt);
 		summarize(vec, txt);
 
