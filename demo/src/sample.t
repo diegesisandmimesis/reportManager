@@ -27,44 +27,34 @@ gameMain: GameMainDef initialPlayerChar = me;
 // Our report manager.  All it does is summarize the >EXAMINE command on
 // the balls.
 ballReportManager: ReportManager
-	reportManagerActions = static [ ExamineAction, SmellAction ]
+	reportManagerFor = Ball
 
 	reportManagerAnnounceText = 'balls'
+;
++ReportSummary
+	action = ExamineAction
 
-	// Replacement for the stock ReportManager method.  This is
-	// the entry point for our custom report logic.
-	summarizeReport(act, vec, txt) {
-		// All we do is summarize >EXAMINE actions.
-		if(act.ofKind(ExamineAction))
-			summarizeExamines(txt);
-		if(act.ofKind(SmellAction))
-			summarizeSmells(txt);
-	}
-
-	// Summarize the examines.  The argument is a StringBuffer we
-	// can add things to.
-	summarizeExamines(txt) {
+	// Summarize the examines.
+	summarize(vec, txt) {
 		local l;
 
 		// If we don't remember examining any balls this turn,
 		// we have nothing to summarize.
-		if((l = getReportObjects()) == nil)
+		if((l = getReportObjects(vec)) == nil)
 			return;
 
 		// Append a summary of the objects examined.
 		txt.append('It\'s <<objectLister.makeSimpleList(l)>>. ');
 	}
+;
++ReportSummary
+	action = SmellAction
 
-	summarizeSmells(txt) {
-		if(getReportObjects() == nil)
+	summarize(vec, txt) {
+		if(getReportObjects(vec) == nil)
 			return;
 
 		txt.append('They all smell the same. ');
-	}
-
-	// We only want to summarize reports involving balls.
-	checkReport(report) {
-		return(gReportObjectOfKind(report, Ball));
 	}
 ;
 

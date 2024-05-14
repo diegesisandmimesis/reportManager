@@ -43,47 +43,41 @@
 //		;
 //			
 //	We then have to write the code that's actually going to do the
-//	summarizing.  This involves definition a number of things on
-//	the report manager:
+//	summarizing.  We do this by adding ReportSummary objects to the report
+//	manager.
 //
-//		reportManagerActions
-//			a list of the actions the report manager will
-//			handle.  example:
+//	Each ReportSummary needs to define:
 //
-//			reportManagerActions = static [ ExamineAction ]
+//		action
+//			property defining what Action class it applies to
 //
-//		checkReport(report)
-//			a method that accepts a report instance as its
-//			only argument and returns boolean true if the
-//			report manager wants to summarize the report,
-//			nil otherwise
-//
-//		summarizeReport(act, vec, txt)
-//			a method that actually writes the summary
-//
-//			arguments are:  the action type;  a vector
-//			containing the reports being summarized;  and
-//			the StringBuffer to write the summary to
-//
+//		summarize(vec, txt)
+//			method taking two arguments:  a vector of the
+//			reports being summarized and a StringBuffer to
+//			write the summary to.
 //
 //	An example:
 //
 //		ballReportManager: ReportManager
-//			// We only summarize >EXAMINE reports
-//			reportManagerActions = static [ ExamineAction ]
-//
 //			// We only summarize reports involving Ball instances.
 //			checkReport(report) {
 //				return((report.dobj_ != nil)
 //					&& report.dobj_.ofKind(Ball));
 //			}
+//		;
+//		+ReportSummary
+//			// We summarize >EXAMINE reports
+//			action = ExamineAction
 //
 //			// Actually summarize the reports.
-//			summarizeReport(act, vec, txt) {
+//			summarize(vec, txt) {
 //				local l;
 //
 //				// Make sure we have data to summarize.
-//				if((l = getReporObjects()) == nil)
+//				// Here we use a convenience method to get
+//				// the objects from the report manager instead
+//				// of digging through the reports ourselves.
+//				if((l = reportManager.getReporObjects()) == nil)
 //					return;
 //
 //				// Use objectLister to make the summary.
@@ -116,72 +110,15 @@ reportManagerModuleID: ModuleID {
         listingOrder = 99
 }
 
-// Remember the direct object in every command report.
-// This approach is from Eric Eve's "Manipulating the Transcript"
-//	https://tads.org/t3doc/doc/techman/t3transcript.htm
-modify CommandReport
-	dobj_ = nil
-
-	construct() {
-		inherited();
-		dobj_ = gDobj;
-	}
-;
-
-// Modify TAction to check to see if any matching objects have report
-// managers.
-modify TAction
-	afterActionMain() {
-		inherited();
-		if(parentAction == nil)
-			reportManagerAfterAction();
-	}
-
-	reportManagerAfterAction() {
-		local l;
-
-		// If we don't have any objects, we have nothing to do.
-		// Should never happen.
-		if(dobjList_ == nil)
-			return;
-
-		// Vector to keep track of our matches.
-		l = new Vector(dobjList_.length);
-
-		// Go through the object list.
-		dobjList_.forEach(function(o) {
-			// If the object doesn't have a report manager, bail.
-			if(o.obj_.reportManager == nil)
-				return;
-
-			// Check to see if the report manager handles this
-			// kind of action.
-			if(!o.obj_.reportManager.reportManagerMatchAction(self))
-				return;
-
-			// Remember this report manager.
-			l.appendUnique(o.obj_.reportManager);
-		});
-
-		// Ping all of the report managers we got above.
-		l.forEach(function(o) { o.afterActionMain(); });
-	}
-;
-
-// Modify Thing to have a property for the optional report manager.
-modify Thing
-	reportManager = nil
-;
-
 // The report manager object.
-class ReportManager: object
+class ReportManager: PreinitObject
+	// What kind of object we're a manager for
+	reportManagerFor = nil
+
 	// Minimum number of reports needed to summarize.
 	// If an action doesn't produce at least this many, we won't
 	// do anything.
 	minSummaryLength = 2
-
-	// List of actions we summarize.
-	reportManagerActions = perInstance(new Vector())
 
 	// Announcement text for actions where there's a mixture of
 	// summarized and non-summarized reports.  For example, if
@@ -197,30 +134,62 @@ class ReportManager: object
 	// will just be listed in a line by itself).
 	reportManagerAnnounceText = nil
 
+	// List of our summary objects.
+	_reportManagerSummary = perInstance(new Vector())
+
 	// Property to hold the reports for a specific action.  Set
 	// by the _summarizeReports() wrapper, we just store this so
 	// we don't have to juggle it as an argument for the summary
 	// methods.
 	_reportManagerReports = nil
 
-	addReportManagerAction(obj) {
-		if((obj == nil) || !obj.ofKind(Action))
+	execute() {
+		initReportManager();
+	}
+
+	initReportManager() {
+		if(reportManagerFor == nil)
 			return;
 
-		reportManagerActions.appendUnique(obj);
+		forEachInstance(reportManagerFor, function(o) {
+			o.reportManager = self;
+		});
+	}
+
+	// Add a summary to our list.
+	addReportManagerSummary(obj) {
+		// Make sure it's valid.
+		if((obj == nil) || !obj.ofKind(ReportSummary))
+			return(nil);
+
+		// Add it.
+		_reportManagerSummary.appendUnique(obj);
+		// Have it remember us.
+		obj.reportManager = self;
+
+		return(true);
 	}
 
 	// Returns a list of all the objects in the reports we're
 	// summarizing.
-	getReportObjects() {
+	// Optional arg is a vector of reports.  If not specified, we'll
+	// use our saved copy of the "complete" list of reports for
+	// this action.
+	getReportObjects(vec?) {
 		local r;
 
-		if(_reportManagerReports == nil)
+		// See if we got an argument or we're using the default.
+		if(vec == nil)
+			vec = _reportManagerReports;
+
+		// If we couldn't figure it out, bail.
+		if(vec == nil)
 			return(nil);
 
-		r = new Vector(_reportManagerReports.length);
+		// Vector for results.
+		r = new Vector(vec.length);
 
-		_reportManagerReports.forEach(function(o) {
+		vec.forEach(function(o) {
 			if(o.dobj_ == nil)
 				return;
 			r.appendUnique(o.dobj_);
@@ -270,6 +239,15 @@ class ReportManager: object
 		if(report.action_ != gAction)
 			return(nil);
 
+		// We we're the report manager for a specific object or
+		// class, check to see if our reports to see if they
+		// match it.
+		if(reportManagerFor != nil) {
+			if((report.dobj_ == nil)
+				|| !report.dobj_.ofKind(reportManagerFor))
+				return(nil);
+		}
+
 		if(checkReport(report) != true)
 			return(nil);
 
@@ -315,17 +293,17 @@ class ReportManager: object
 		txt = new StringBuffer();
 
 		l = new Vector(vec.length);
-		reportManagerActions.forEach(function(act) {
+		_reportManagerSummary.forEach(function(s) {
 			l.setLength(0);
 
 			vec.forEach(function(o) {
-				if(!o.action_.ofKind(act))
+				if(!s.matchAction(o.action_))
 					return;
 				l.append(o);
 			});
 
 			if(l.length > 0)
-				_summarizeReport(act, l, txt);
+				s._summarize(l, txt);
 		});
 
 		_reportManagerReports = nil;
@@ -333,21 +311,15 @@ class ReportManager: object
 		return(toString(txt));
 	}
 
-	_summarizeReport(act, lst, txt) {
-		// If we're not summarizing ALL the reports, we add
-		// some announcement text to the start of our summary.
-		if(summarizedReports() != totalReports()) {
-			reportManagerAnnouncement(txt);
-		}
-
-		summarizeReport(act, lst, txt);
-
-	}
-
 	// Figure out what announcement text to use.
 	// Argument is the StringBuffer we're writing the summary to.
-	reportManagerAnnouncement(txt) {
+	reportManagerAnnouncement(txt, vec?) {
 		local obj, t;
+
+		// If we're summarizing ALL the reports, we don't
+		// need to add an announcement.
+		if(summarizedReports() == totalReports())
+			return;
 
 		// We always append a "big" results separator to
 		// the text.  By default this will be "<.p>"
@@ -363,11 +335,11 @@ class ReportManager: object
 			// first object from the reports we're summarizing.
 
 			// No objects, bail.
-			if((obj = getReportObjects()) == nil)
+			if((vec = getReportObjects(vec)) == nil)
 				return;
 
 			// No first object, bail.
-			if((obj = obj[1]) == nil)
+			if((obj = vec[1]) == nil)
 				return;
 
 			// Get the object's plural name.
@@ -390,8 +362,8 @@ class ReportManager: object
 	reportManagerMatchAction(act) {
 		local i;
 
-		for(i = 1; i <= reportManagerActions.length; i++) {
-			if(act.ofKind(reportManagerActions[i])) {
+		for(i = 1; i <= _reportManagerSummary.length; i++) {
+			if(_reportManagerSummary[i].matchAction(act)) {
 				return(true);
 			}
 		}

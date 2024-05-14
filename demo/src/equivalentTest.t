@@ -27,13 +27,14 @@ gameMain: GameMainDef initialPlayerChar = me;
 class Pebble: Thing '(small) (round) pebble*pebbles' 'pebble'
 	"A small, round pebble. "
 	isEquivalent = true
-	reportManager = pebbleReportManager
 ;
 
 pebbleReportManager: ReportManager
-	reportManagerActions = static [ ExamineAction ]
-
-	summarizeReport(act, vec, txt) {
+	reportManagerFor = Pebble
+;
++ReportSummary
+	action = ExamineAction
+	summarize(vec, txt) {
 		local l;
 
 		if((l = getReportObjects()) == nil)
@@ -41,10 +42,6 @@ pebbleReportManager: ReportManager
 
 		txt.append('It\'s <<spellInt(l.length)>> small, round
 			pebbles. ');
-	}
-
-	checkReport(report) {
-		return((report.dobj_ != nil) && report.dobj_.ofKind(Pebble));
 	}
 ;
 
