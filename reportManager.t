@@ -24,9 +24,8 @@
 //
 //		red ball: A red ball.
 //
-//	You want to merge the ball reports into a single message, but you
-//	don't want to also merge the pebble description, so you can't just
-//	always summarize multiple >EXAMINE reports together.
+//	The goal is to merge the ball reports into a single message while
+//	still handling the pebble report separately.
 //
 //	To do this we'll implement a report manager for the balls, which
 //	we'll call, unimaginatively, ballReportManager:
@@ -61,8 +60,7 @@
 //		ballReportManager: ReportManager
 //			// We only summarize reports involving Ball instances.
 //			checkReport(report) {
-//				return((report.dobj_ != nil)
-//					&& report.dobj_.ofKind(Ball));
+//				return(gReportObjectOfKind(Ball));
 //			}
 //		;
 //		+ReportSummary
@@ -134,17 +132,24 @@ class ReportManager: object
 	// will just be listed in a line by itself).
 	reportManagerAnnounceText = nil
 
+	// An optional list of ReportSummary classes to add to the report
+	// manager.
+	// Each summary handles a kind of Action, so if we have a list
+	// default summaries we go through the list of summaries already
+	// declared on the report manager and add a default for any
+	// Action that isn't already handled.
 	reportManagerDefaultSummaries = nil
 
 	// List of our summary objects.
 	_reportManagerSummary = perInstance(new Vector())
 
 	// Property to hold the reports for a specific action.  Set
-	// by the _summarizeReports() wrapper, we just store this so
+	// by the summarizeReports() wrapper, we just store this so
 	// we don't have to juggle it as an argument for the summary
 	// methods.
 	_reportManagerReports = nil
 
+	// Preinit method.
 	initializeReportManager() {
 		initializeReportManagerFor();
 		initializeReportManagerDefaultSummaries();
@@ -251,6 +256,7 @@ class ReportManager: object
 		return(r);
 	}
 
+	// Returns all the reports for the given action.
 	getReportList(act) {
 		local r;
 
@@ -282,7 +288,7 @@ class ReportManager: object
 		gTranscript.summarizeAction(
 			function(x) { return(_checkReport(x)); },
 			function(vec) {
-				return(_summarizeAllReports(vec));
+				return(summarizeReports(vec));
 			}
 		);
 	}
@@ -308,37 +314,13 @@ class ReportManager: object
 	}
 
 	// Decide whether or not we're going to summarize the given report.
+	// To be overwritten by instances.
 	checkReport(report) { return(true); }
-
-	// Returns the total number of reports for the current action
-	// (including ones we're not going to summarize).
-	totalReports() {
-		return((gAction && gAction.dobjList_)
-			? gAction.dobjList_.length
-			: 0);
-	}
-
-	// Returns the number of reports we're summarizing.
-	summarizedReports() {
-		local n;
-
-		if((gAction == nil) || (gAction.dobjList_ == nil))
-			return(0);
-
-		n = 0;
-		gAction.dobjList_.forEach(function(o) {
-			if(o.obj_.reportManager != self)
-				return;
-			n += 1;
-		});
-
-		return(n);
-	}
 
 	// Internal wrapper for the main summary method.  We
 	// create a string buffer to hold the summarized action(s),
 	// and then call the "real" method.
-	_summarizeAllReports(vec) {
+	summarizeReports(vec) {
 		local txt, l;
 
 		_reportManagerReports = vec;
@@ -364,8 +346,34 @@ class ReportManager: object
 		return(toString(txt));
 	}
 
+	// Returns the total number of reports for the current action
+	// (including ones we're not going to summarize).
+	totalReports() {
+		return((gAction && gAction.dobjList_)
+			? gAction.dobjList_.length : 0);
+	}
+
+	// Returns the number of reports we're summarizing.
+	summarizedReports() {
+		local n;
+
+		if((gAction == nil) || (gAction.dobjList_ == nil))
+			return(0);
+
+		n = 0;
+		gAction.dobjList_.forEach(function(o) {
+			if(o.obj_.reportManager != self)
+				return;
+			n += 1;
+		});
+
+		return(n);
+	}
+
 	// Figure out what announcement text to use.
-	// Argument is the StringBuffer we're writing the summary to.
+	// First argument is the StringBuffer we're writing the summary to.
+	// Optional second arg is a vector containing the reports we're
+	// summarizing.
 	reportManagerAnnouncement(txt, vec?) {
 		local obj, t;
 
@@ -373,10 +381,6 @@ class ReportManager: object
 		// need to add an announcement.
 		if(summarizedReports() == totalReports())
 			return;
-
-		// We always append a "big" results separator to
-		// the text.  By default this will be "<.p>"
-		//txt.append(libMessages.complexResultsSeparator);
 
 		if(reportManagerAnnounceText != nil) {
 			// If we have an explicit announcement text defined,
@@ -406,10 +410,6 @@ class ReportManager: object
 			txt.append('<./p0>\n<.announceObj>' + t
 				+ ':<./announceObj> <.p0>');
 	}
-
-	// Stub method, to be overwritten by subclasses/instances.
-	// This is where the actual summary logic will live.
-	summarizeReport(act, vec, txt) {}
 
 	// See if we handle the given action type.
 	reportManagerMatchAction(act) {

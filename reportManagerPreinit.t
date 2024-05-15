@@ -2,6 +2,9 @@
 //
 // reportManagerPreinit.t
 //
+//	Preinit singleton for report managers.  We use a singleton
+//	to make it easier to ensure seriality of the different init methods.
+//
 //
 #include <adv3.h>
 #include <en_us.h>

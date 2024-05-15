@@ -2,6 +2,8 @@
 //
 // reportManagerMods.t
 //
+//	Modifications to base TADS3/adv3 classes.
+//
 //
 #include <adv3.h>
 #include <en_us.h>
