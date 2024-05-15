@@ -39,12 +39,38 @@ class ReportSummary: object
 	// to prepend announcement text (usually the object name with
 	// a colon) to the summary.
 	_summarize(vec, txt) {
+		local idx, l, v;
+
 		if((vec == nil) || (vec.length < 1))
 			return;
-		reportManager.reportManagerAnnouncement(txt);
-		summarize(vec, txt);
 
+		l = new Vector(vec.length);
+		v = new Vector(vec.length);
+		vec.forEach(function(o) {
+			if((idx = l.indexOf(o.dobj_.location)) == nil) {
+				l.append(o.dobj_.location);
+				v.append(new Vector());
+				idx = l.length;
+			}
+			v[idx].append(o);
+		});
+
+		if(l.length == 1) {
+			reportSummaryMessageParams(vec);
+			reportManager.reportManagerAnnouncement(txt);
+			summarize(vec, txt);
+		} else {
+			v.forEach(function(o) {
+				reportSummaryMessageParams(o);
+				reportManager.setReportVector(o);
+				reportManager.reportManagerAnnouncement(txt,
+					o, true);
+				summarize(o, txt);
+			});
+		}
 	}
+
+	reportSummaryMessageParams(v?) {}
 
 	summarize(vec, txt) {}
 ;

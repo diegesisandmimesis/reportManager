@@ -149,6 +149,12 @@ class ReportManager: object
 	// methods.
 	_reportManagerReports = nil
 
+	// Used internally to make sure we only summarize things once
+	// per action.
+	_summarizeFlag = nil
+
+	_summarizedReports = nil
+
 	// Preinit method.
 	initializeReportManager() {
 		initializeReportManagerFor();
@@ -256,6 +262,23 @@ class ReportManager: object
 		return(r);
 	}
 
+	getReportDobj(vec?) {
+		local i, l;
+
+		if((l = getReportObjects(vec)) == nil)
+			return(nil);
+
+		if(l.length < 1)
+			return(nil);
+
+		for(i = 1; i <= l.length; i++) {
+			if(!l[i].ofKind(CollectiveGroup))
+				return(l[i]);
+		}
+
+		return(l[1]);
+	}
+
 	// Returns all the reports for the given action.
 	getReportList(act) {
 		local r;
@@ -284,10 +307,25 @@ class ReportManager: object
 			return;
 		}
 
+		// Kludge to make sure we only do one summary per action.
+		_summarizeFlag = true;
+
 		// Actually do the summary.
 		gTranscript.summarizeAction(
 			function(x) { return(_checkReport(x)); },
 			function(vec) {
+				// Make sure we're not doing multiple summaries
+				// of the same stuff.  This can happen when
+				// there are a bunch of objects and we're
+				// summarizing ones at the start and end of
+				// the report list.  For example, when we're
+				// summarizing an inventory listing and our
+				// summary applies to items at the start and
+				// end but not the ones in the middle.
+				if(_summarizeFlag != true)
+					return('');
+				_summarizeFlag = nil;
+
 				return(summarizeReports(vec));
 			}
 		);
@@ -317,13 +355,18 @@ class ReportManager: object
 	// To be overwritten by instances.
 	checkReport(report) { return(true); }
 
+	setReportVector(v) {
+		_reportManagerReports = v;
+		_summarizedReports = nil;
+	}
+
 	// Internal wrapper for the main summary method.  We
 	// create a string buffer to hold the summarized action(s),
 	// and then call the "real" method.
 	summarizeReports(vec) {
 		local txt, l;
 
-		_reportManagerReports = vec;
+		setReportVector(vec);
 
 		txt = new StringBuffer();
 
@@ -341,7 +384,7 @@ class ReportManager: object
 				s._summarize(l, txt);
 		});
 
-		_reportManagerReports = nil;
+		setReportVector(nil);
 
 		return(toString(txt));
 	}
@@ -354,8 +397,12 @@ class ReportManager: object
 	}
 
 	// Returns the number of reports we're summarizing.
-	summarizedReports() {
+/*
+	getSummaryCount() {
 		local n;
+
+		if(_summarizedReports != nil)
+			return(_summarizedReports);
 
 		if((gAction == nil) || (gAction.dobjList_ == nil))
 			return(0);
@@ -367,6 +414,35 @@ class ReportManager: object
 			n += 1;
 		});
 
+		_summarizedReports = n;
+
+		return(n);
+	}
+*/
+	getSummaryCount() {
+		local loc, n;
+
+		if(_summarizedReports != nil)
+			return(_summarizedReports);
+
+		if((gAction == nil) || (gAction.dobjList_ == nil))
+			return(0);
+
+		if(((loc = _reportManagerReports) == nil) || (loc.length < 1))
+			return(0);
+		loc = loc[1].dobj_.location;
+
+		n = 0;
+		gAction.dobjList_.forEach(function(o) {
+			if(o.obj_.reportManager != self)
+				return;
+			if(o.obj_.location != loc)
+				return;
+			n += 1;
+		});
+
+		_summarizedReports = n;
+
 		return(n);
 	}
 
@@ -374,12 +450,12 @@ class ReportManager: object
 	// First argument is the StringBuffer we're writing the summary to.
 	// Optional second arg is a vector containing the reports we're
 	// summarizing.
-	reportManagerAnnouncement(txt, vec?) {
+	reportManagerAnnouncement(txt, vec?, prep?) {
 		local obj, t;
 
 		// If we're summarizing ALL the reports, we don't
 		// need to add an announcement.
-		if(summarizedReports() == totalReports())
+		if((getSummaryCount() == totalReports()) && !prep)
 			return;
 
 		if(reportManagerAnnounceText != nil) {
@@ -392,15 +468,15 @@ class ReportManager: object
 			// first object from the reports we're summarizing.
 
 			// No objects, bail.
-			if((vec = getReportObjects(vec)) == nil)
-				return;
-
-			// No first object, bail.
-			if((obj = vec[1]) == nil)
+			if((obj = getReportDobj(vec)) == nil)
 				return;
 
 			// Get the object's plural name.
 			t = obj.pluralName;
+		}
+
+		if(prep == true) {
+			t = _announcementWithPrep(t, vec);
 		}
 
 		// Add the announcement text.  The format is identical
@@ -409,6 +485,23 @@ class ReportManager: object
 		if(t)
 			txt.append('<./p0>\n<.announceObj>' + t
 				+ ':<./announceObj> <.p0>');
+	}
+
+	_announcementWithPrep(t, vec) {
+		local obj;
+
+		if((obj = getReportDobj(vec)) == nil)
+			return(t);
+
+		obj = obj.location;
+
+		if(obj.ofKind(Actor)) {
+			t = '<<t>> carried by <<obj.theNameObj>>';
+		} else {
+			t = '<<t>> <<obj.objInPrep>> <<obj.theNameObj>>';
+		}
+
+		return(t);
 	}
 
 	// See if we handle the given action type.

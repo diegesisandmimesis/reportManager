@@ -47,6 +47,9 @@ pebbleReportManager: ReportManager
 
 startRoom: Room 'Void' "This is a featureless void.";
 +me: Person;
+++Pebble;
+++Pebble;
+++Pebble;
 +Pebble;
 +Pebble;
 +Pebble;

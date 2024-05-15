@@ -33,22 +33,12 @@ ballReportManager: ReportManager
 +ReportSummary @ExamineAction
 	// Summarize the examines.
 	summarize(vec, txt) {
-		local l;
-
-		// If we don't remember examining any balls this turn,
-		// we have nothing to summarize.
-		if((l = getReportObjects(vec)) == nil)
-			return;
-
-		// Append a summary of the objects examined.
-		txt.append('It\'s <<objectLister.makeSimpleList(l)>>. ');
+		txt.append('It\'s <<objectLister
+			.makeSimpleList(getReportObjects(vec))>>. ');
 	}
 ;
 +ReportSummary @SmellAction
 	summarize(vec, txt) {
-		if(getReportObjects(vec) == nil)
-			return;
-
 		txt.append('They all smell the same. ');
 	}
 ;
@@ -82,8 +72,8 @@ class Ball: Thing 'ball*balls' 'ball'
 
 startRoom: Room 'Void' "This is a featureless void.";
 +me: Person;
-// A bunch of ball instances.
-+pebble: Thing '(small) (round) pebble' 'pebble' "A small, round pebble. ";
+// A bunch of ball instances with a pebble in the middle.
 +redBall: Ball color = 'red';
++pebble: Thing '(small) (round) pebble' 'pebble' "A small, round pebble. ";
 +greenBall: Ball color = 'green';
 +blueBall: Ball color = 'blue';
