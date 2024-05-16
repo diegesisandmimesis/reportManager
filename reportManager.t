@@ -310,7 +310,7 @@ class ReportManager: ReportManagerObject
 	summarizeReports(vec) {
 		local txt, l;
 
-		_announceFlag = (totalReports() == summarizedReports());
+		_announceFlag = (totalReports() != summarizedReports());
 		setReportVector(vec);
 
 		txt = new StringBuffer();
@@ -367,6 +367,9 @@ class ReportManager: ReportManagerObject
 		// need to add an announcement.
 		if(!_announceFlag && !cfg.prep)
 			return;
+
+		if(_announceFlag)
+			txt.append(libMessages.complexResultsSeparator);
 
 		if(reportManagerAnnounceText != nil) {
 			// If we have an explicit announcement text defined,
