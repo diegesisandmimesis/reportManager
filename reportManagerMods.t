@@ -64,6 +64,29 @@ modify TAction
 
 // Modify Thing to have a property for the optional report manager.
 modify Thing
+	// The report manager we use, if any.
 	reportManager = nil
+
+	// If we're in a report and we're selected as the "representative"
+	// object for the report, this will hold the number of objects
+	// being summarized by the report.
+	// Used mostly to make it easier to compute once and then look
+	// up instead of computing on reference.
 	_reportCount = nil
+
+	reportInPrep(txt) {
+		return('<<txt>> <<objInPrep>> <<theNameObj>>');
+	}
+;
+
+modify Actor
+	reportInPrep(txt) {
+		return('<<theNamePossAdj>> <<txt>>');
+	}
+;
+
+modify Room
+	reportInPrep(txt) {
+		return('<<txt>> on the ground');
+	}
 ;

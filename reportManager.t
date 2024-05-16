@@ -398,18 +398,10 @@ class ReportManager: ReportManagerObject
 	}
 
 	_announcementWithPrep(t, obj) {
-		if(obj == nil)
+		if((obj == nil) || (obj.location == nil))
 			return(t);
 
-		obj = obj.location;
-
-		if(obj.ofKind(Actor)) {
-			t = '<<t>> carried by <<obj.theNameObj>>';
-		} else {
-			t = '<<t>> <<obj.objInPrep>> <<obj.theNameObj>>';
-		}
-
-		return(t);
+		return(obj.location.reportInPrep(t));
 	}
 
 	// See if we handle the given action type.

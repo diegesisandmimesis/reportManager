@@ -9,10 +9,12 @@
 #include "reportManager.h"
 
 class ReportSummaryData: object
-	dobj = nil
-	vec = nil
-	count = nil
-	prep = nil
+	dobj = nil		// representative object for this summary
+	vec = nil		// vector of reports being summarized
+	count = nil		// count of objects being summarized
+	prep = nil		// boolean, if true supply prepositional
+				//	announcement ("pebble in box:") for
+				//	the summary
 
 	construct(v, o, p) {
 		vec = v;
@@ -45,11 +47,12 @@ class ReportSummary: ReportManagerObject
 		return(act.ofKind(action));
 	}
 
-	// Wrapper for the summary method.  We ping the report manager
-	// to figure out if EVERY report for the current action is being
-	// summarized, and the report manager decides whether or not
-	// to prepend announcement text (usually the object name with
-	// a colon) to the summary.
+	// Figure out if all the objects being summarized are in the
+	// same location or not.  If so, we don't have anything special
+	// to do.  If not, then we group everything by location and
+	// include a prepositional announcement before each summary (indicating
+	// which group of objects each summary applies to:  "pebbles in the
+	// box" versus "pebbles carried by Bob" and so on).
 	summarizeByLocation(vec, txt) {
 		local dobjs, i, locs, n, obj, vecs;
 
