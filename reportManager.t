@@ -368,11 +368,6 @@ class ReportManager: ReportManagerObject
 		if(!_announceFlag && !cfg.prep)
 			return;
 
-		//if(_announceFlag)
-			//txt.append(libMessages.complexResultsSeparator);
-		if(_announceFlag && txt.length == 0)
-			txt.append(libMessages.commandResultsPrefix);
-
 		if(reportManagerAnnounceText != nil) {
 			// If we have an explicit announcement text defined,
 			// use it.
