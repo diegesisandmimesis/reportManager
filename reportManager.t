@@ -108,8 +108,14 @@ reportManagerModuleID: ModuleID {
         listingOrder = 99
 }
 
+class ReportManagerObject: Syslog
+	syslogID = 'ReportManager'
+;
+
 // The report manager object.
-class ReportManager: object
+class ReportManager: ReportManagerObject
+	reportManagerID = nil
+
 	// What kind of object we're a manager for
 	reportManagerFor = nil
 
@@ -153,7 +159,7 @@ class ReportManager: object
 	// per action.
 	_summarizeFlag = nil
 
-	_summarizedReports = nil
+	_announceFlag = nil
 
 	// Preinit method.
 	initializeReportManager() {
@@ -234,69 +240,6 @@ class ReportManager: object
 		return(true);
 	}
 
-	// Returns a list of all the objects in the reports we're
-	// summarizing.
-	// Optional arg is a vector of reports.  If not specified, we'll
-	// use our saved copy of the "complete" list of reports for
-	// this action.
-	getReportObjects(vec?) {
-		local r;
-
-		// See if we got an argument or we're using the default.
-		if(vec == nil)
-			vec = _reportManagerReports;
-
-		// If we couldn't figure it out, bail.
-		if(vec == nil)
-			return(nil);
-
-		// Vector for results.
-		r = new Vector(vec.length);
-
-		vec.forEach(function(o) {
-			if(o.dobj_ == nil)
-				return;
-			r.appendUnique(o.dobj_);
-		});
-
-		return(r);
-	}
-
-	getReportDobj(vec?) {
-		local i, l;
-
-		if((l = getReportObjects(vec)) == nil)
-			return(nil);
-
-		if(l.length < 1)
-			return(nil);
-
-		for(i = 1; i <= l.length; i++) {
-			if(!l[i].ofKind(CollectiveGroup))
-				return(l[i]);
-		}
-
-		return(l[1]);
-	}
-
-	// Returns all the reports for the given action.
-	getReportList(act) {
-		local r;
-
-		if(_reportManagerReports == nil)
-			return(nil);
-
-		r = new Vector(_reportManagerReports.length);
-
-		_reportManagerReports.forEach(function(o) {
-			if(!o.action_.ofKind(act))
-				return;
-			r.append(o);
-		});
-
-		return(r);
-	}
-
 	// Callback from gAction.
 	// This is where we do most of the work, after action resolution
 	// has finished.
@@ -306,6 +249,8 @@ class ReportManager: object
 		if(gAction.dobjList_.length < minSummaryLength) {
 			return;
 		}
+
+		_announceFlag = nil;
 
 		// Kludge to make sure we only do one summary per action.
 		_summarizeFlag = true;
@@ -357,7 +302,6 @@ class ReportManager: object
 
 	setReportVector(v) {
 		_reportManagerReports = v;
-		_summarizedReports = nil;
 	}
 
 	// Internal wrapper for the main summary method.  We
@@ -366,6 +310,7 @@ class ReportManager: object
 	summarizeReports(vec) {
 		local txt, l;
 
+		_announceFlag = (totalReports() == summarizedReports());
 		setReportVector(vec);
 
 		txt = new StringBuffer();
@@ -381,10 +326,8 @@ class ReportManager: object
 			});
 
 			if(l.length > 0)
-				s._summarize(l, txt);
+				s.summarizeByLocation(l, txt);
 		});
-
-		setReportVector(nil);
 
 		return(toString(txt));
 	}
@@ -397,13 +340,9 @@ class ReportManager: object
 	}
 
 	// Returns the number of reports we're summarizing.
-/*
-	getSummaryCount() {
+	summarizedReports() {
 		local n;
 
-		if(_summarizedReports != nil)
-			return(_summarizedReports);
-
 		if((gAction == nil) || (gAction.dobjList_ == nil))
 			return(0);
 
@@ -413,35 +352,6 @@ class ReportManager: object
 				return;
 			n += 1;
 		});
-
-		_summarizedReports = n;
-
-		return(n);
-	}
-*/
-	getSummaryCount() {
-		local loc, n;
-
-		if(_summarizedReports != nil)
-			return(_summarizedReports);
-
-		if((gAction == nil) || (gAction.dobjList_ == nil))
-			return(0);
-
-		if(((loc = _reportManagerReports) == nil) || (loc.length < 1))
-			return(0);
-		loc = loc[1].dobj_.location;
-
-		n = 0;
-		gAction.dobjList_.forEach(function(o) {
-			if(o.obj_.reportManager != self)
-				return;
-			if(o.obj_.location != loc)
-				return;
-			n += 1;
-		});
-
-		_summarizedReports = n;
 
 		return(n);
 	}
@@ -450,12 +360,12 @@ class ReportManager: object
 	// First argument is the StringBuffer we're writing the summary to.
 	// Optional second arg is a vector containing the reports we're
 	// summarizing.
-	reportManagerAnnouncement(txt, vec?, prep?) {
-		local obj, t;
+	reportManagerAnnouncement(cfg, txt) {
+		local t;
 
 		// If we're summarizing ALL the reports, we don't
 		// need to add an announcement.
-		if((getSummaryCount() == totalReports()) && !prep)
+		if(!_announceFlag && !cfg.prep)
 			return;
 
 		if(reportManagerAnnounceText != nil) {
@@ -468,15 +378,15 @@ class ReportManager: object
 			// first object from the reports we're summarizing.
 
 			// No objects, bail.
-			if((obj = getReportDobj(vec)) == nil)
+			if(cfg.dobj == nil)
 				return;
 
 			// Get the object's plural name.
-			t = obj.pluralName;
+			t = cfg.dobj.pluralName;
 		}
 
 		if(prep == true) {
-			t = _announcementWithPrep(t, vec);
+			t = _announcementWithPrep(t, cfg.dobj);
 		}
 
 		// Add the announcement text.  The format is identical
@@ -487,10 +397,8 @@ class ReportManager: object
 				+ ':<./announceObj> <.p0>');
 	}
 
-	_announcementWithPrep(t, vec) {
-		local obj;
-
-		if((obj = getReportDobj(vec)) == nil)
+	_announcementWithPrep(t, obj) {
+		if(obj == nil)
 			return(t);
 
 		obj = obj.location;

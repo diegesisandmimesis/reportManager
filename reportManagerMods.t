@@ -65,4 +65,5 @@ modify TAction
 // Modify Thing to have a property for the optional report manager.
 modify Thing
 	reportManager = nil
+	_reportCount = nil
 ;

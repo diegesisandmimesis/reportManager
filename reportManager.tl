@@ -3,3 +3,4 @@ source: reportManager.t
 source: reportManagerSummary.t
 source: reportManagerMods.t
 source: reportManagerPreinit.t
+source: reportManagerDebug.t

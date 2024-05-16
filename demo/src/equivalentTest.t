@@ -34,20 +34,14 @@ pebbleReportManager: ReportManager
 ;
 +ReportSummary
 	action = ExamineAction
-	summarize(vec, txt) {
-		local l;
-
-		if((l = getReportObjects()) == nil)
-			return;
-
-		txt.append('It\'s <<spellInt(l.length)>> small, round
+	summarize(data, txt) {
+		txt.append('It\'s <<spellInt(data.count)>> small, round
 			pebbles. ');
 	}
 ;
 
 startRoom: Room 'Void' "This is a featureless void.";
 +me: Person;
-++Pebble;
 ++Pebble;
 ++Pebble;
 +Pebble;
