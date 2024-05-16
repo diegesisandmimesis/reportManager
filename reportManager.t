@@ -356,18 +356,27 @@ class ReportManager: ReportManagerObject
 		return(n);
 	}
 
+	getReportManagerAnnounceText(cfg) {
+		if(reportManagerAnnounceText != nil)
+			return(reportManagerAnnounceText);
+
+		return(cfg.dobj.getBestDistinguisher(
+			gAction.getResolvedObjList(DirectObject))
+			.singlePluralName(cfg.dobj, cfg.count));
+	}
+
 	// Figure out what announcement text to use.
 	// First argument is the StringBuffer we're writing the summary to.
 	// Optional second arg is a vector containing the reports we're
 	// summarizing.
 	reportManagerAnnouncement(cfg, txt) {
-		local t;
-
 		// If we're summarizing ALL the reports, we don't
 		// need to add an announcement.
 		if(!_announceFlag && !cfg.prep)
 			return;
 
+/*
+//aioSay('\ndistinguisher = <q><<cfg.dobj.getBestDistinguisher(gAction.getResolvedObjList(DirectObject)).name(cfg.dobj)>></q>\n ');
 		if(reportManagerAnnounceText != nil) {
 			// If we have an explicit announcement text defined,
 			// use it.
@@ -389,20 +398,23 @@ class ReportManager: ReportManagerObject
 			t = _announcementWithPrep(t, cfg.dobj);
 		}
 
+*/
 		// Add the announcement text.  The format is identical
 		// to libMessages.announceMultiActionObject(), which
 		// is what non-summarized objects would use by default.
-		if(t)
-			txt.append('<./p0>\n<.announceObj>' + t
-				+ ':<./announceObj> <.p0>');
+		txt.append('<./p0>\n<.announceObj>' + 
+			getReportManagerAnnounceText(cfg)
+			+ ':<./announceObj> <.p0>');
 	}
 
+/*
 	_announcementWithPrep(t, obj) {
 		if((obj == nil) || (obj.location == nil))
 			return(t);
 
 		return(obj.location.reportInPrep(t));
 	}
+*/
 
 	// See if we handle the given action type.
 	reportManagerMatchAction(act) {

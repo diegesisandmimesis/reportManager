@@ -90,3 +90,67 @@ modify Room
 		return('<<txt>> on the ground');
 	}
 ;
+
+
+//
+// Now we modify the distinguishers.
+// We add an "aOrCountName" method to each, which we use for 
+modify nullDistinguisher
+	aOrCountName(obj, cnt) {
+		return((cnt == 1) ? name(obj) : obj.countName(cnt));
+	}
+	singlePluralName(obj, cnt) {
+		return((cnt == 1) ? name(obj) : obj.pluralName);
+	}
+;
+
+modify basicDistinguisher
+	aOrCountName(obj, cnt) {
+		return((cnt == 1) ? name(obj) : obj.countDisambigName(cnt));
+	}
+	singlePluralName(obj, cnt) {
+		return((cnt == 1) ? name(obj) : obj.pluralName);
+	}
+;
+
+modify ownershipDistinguisher
+	aOrCountName(obj, cnt) {
+		return((cnt == 1)
+			? name(obj) : obj.countNameOwnerLoc(cnt, true));
+	}
+	singlePluralName(obj, cnt) {
+		return((cnt == 1) ? name(obj) : obj.pluralNameOwnerLoc(true));
+	}
+;
+
+modify locationDistinguisher
+	aOrCountName(obj, cnt) {
+		return((cnt == 1)
+			? name(obj) : obj.countNameOwnerLoc(cnt, nil));
+	}
+	singlePluralName(obj, cnt) {
+		return((cnt == 1) ? name(obj) : obj.pluralNameOwnerLoc(nil));
+	}
+;
+
+modify litUnlitDistinguisher
+	aOrCountName(obj, cnt) {
+		return((cnt == 1) ? name(obj) : obj.pluralNameLit);
+	}
+	singlePluralName(obj, cnt) {
+		return((cnt == 1) ? name(obj) : obj.pluralNameLit);
+	}
+;
+
+modify Thing
+	pluralNameOwnerLoc(ownerPriority) {
+		local owner;
+
+		if(((owner = getNominalOwner()) != nil)
+			&& (ownerPriority || isDirectlyIn(owner))) {
+			return(owner.theNamePossAdj + ' ' + pluralName);
+		} else {
+			return(location.childInNameWithOwner(pluralName));
+		}
+	}
+;
