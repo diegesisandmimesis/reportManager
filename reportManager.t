@@ -385,7 +385,7 @@ class ReportManager: ReportManagerObject
 			t = cfg.dobj.pluralName;
 		}
 
-		if(prep == true) {
+		if(cfg.prep == true) {
 			t = _announcementWithPrep(t, cfg.dobj);
 		}
 
