@@ -34,9 +34,8 @@ pebbleReportManager: ReportManager
 ;
 +ReportSummary
 	action = ExamineAction
-	summarize(data, txt) {
-		txt.append('It\'s <<spellInt(data.count)>> small, round
-			pebbles. ');
+	summarize(data) {
+		return('It\'s <<spellInt(data.count)>> small, round pebbles. ');
 	}
 ;
 

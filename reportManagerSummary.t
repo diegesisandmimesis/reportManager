@@ -10,16 +10,19 @@
 
 class ReportSummaryData: object
 	dobj = nil		// representative object for this summary
+	objs = nil		// vector of objects
 	vec = nil		// vector of reports being summarized
 	count = nil		// count of objects being summarized
 	prep = nil		// boolean, if true supply prepositional
 				//	announcement ("pebble in box:") for
 				//	the summary
 
-	construct(v, o, p) {
+	construct(v, o, ol, p) {
 		vec = v;
 		dobj = o;
+		objs = ol;
 		prep = p;
+
 		count = dobj._reportCount;
 	}
 ;
@@ -54,13 +57,14 @@ class ReportSummary: ReportManagerObject
 	// which group of objects each summary applies to:  "pebbles in the
 	// box" versus "pebbles carried by Bob" and so on).
 	summarizeByLocation(vec, txt) {
-		local dobjs, i, locs, n, obj, vecs;
+		local dobjs, i, locs, n, obj, oList, vecs;
 
 		if((vec == nil) || (vec.length < 1))
 			return;
 
 		locs = new Vector(vec.length);
 		dobjs = new Vector(vec.length);
+		oList = new Vector(vec.length);
 		vecs = new Vector(vec.length);
 
 		vec.forEach(function(o) {
@@ -69,6 +73,7 @@ class ReportSummary: ReportManagerObject
 			if((i = locs.indexOf(o.dobj_.location)) == nil) {
 				locs.appendUnique(o.dobj_.location);
 				dobjs.append(o.dobj_);
+				oList.append(new Vector());
 				vecs.append(new Vector());
 				i = locs.length;
 			}
@@ -82,6 +87,7 @@ class ReportSummary: ReportManagerObject
 					return;
 				if(o.obj_.location != locs[i])
 					return;
+				oList[i].append(o.obj_);
 				n += 1;
 			});
 			dobjs[i]._reportCount = n;
@@ -89,15 +95,15 @@ class ReportSummary: ReportManagerObject
 
 		for(i = 1; i <= locs.length; i++) {
 			obj = new ReportSummaryData(vecs[i], dobjs[i],
-				(locs.length > 1));
+				oList[i], (locs.length > 1));
 
 			reportSummaryMessageParams(obj.dobj);
 			reportManager.reportManagerAnnouncement(obj, txt);
-			summarize(obj, txt);
+			txt.append(summarize(obj));
 		}
 	}
 
 	reportSummaryMessageParams(obj?) {}
 
-	summarize(data, txt) {}
+	summarize(data) {}
 ;

@@ -32,15 +32,12 @@ ballReportManager: ReportManager
 ;
 +ReportSummary @ExamineAction
 	// Summarize the examines.
-	summarize(vec, txt) {
-		txt.append('It\'s <<objectLister
-			.makeSimpleList(getReportObjects(vec))>>. ');
+	summarize(data) {
+		return('It\'s <<objectLister.makeSimpleList(data.objs)>>. ');
 	}
 ;
 +ReportSummary @SmellAction
-	summarize(vec, txt) {
-		txt.append('They all smell the same. ');
-	}
+	summarize(data) { return('They all smell the same. '); }
 ;
 
 // A class for the objects we're going to summarize.
