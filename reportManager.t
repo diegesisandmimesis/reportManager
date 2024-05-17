@@ -246,9 +246,6 @@ class ReportManager: ReportManagerObject
 		_distinguisherFlag = nil;
 
 		// Actually do the summary.
-		//gTranscript.summarizeAction(
-
-		//gTranscript.sortedSummarizeAction(
 		gTranscript.sortedSummarizeAction(
 			function(x) { return(_checkReport(x)); },
 			function(vec) { return(sortReports(vec)); },
@@ -256,10 +253,13 @@ class ReportManager: ReportManagerObject
 		);
 	}
 
+	setDistinguisherFlag() { _distinguisherFlag = true; }
+
 	// Wrapper for the main checkReport() method.
 	// This is where we look at a report and decide whether or not
 	// we want to summarize it.
 	_checkReport(report) {
+		// Make sure the report is part of the action.
 		if(report.action_ != gAction) {
 			return(nil);
 		}
@@ -274,6 +274,7 @@ class ReportManager: ReportManagerObject
 			}
 		}
 
+		// Call the "real" method.
 		if(checkReport(report) != true)
 			return(nil);
 
@@ -284,14 +285,27 @@ class ReportManager: ReportManagerObject
 	// To be overwritten by instances.
 	checkReport(report) { return(true); }
 
+	// Basic distinguisher checks.
+	_checkDistinguishers() {
+		// If all the reports for the current action aren't being
+		// summarized then we need to add object distinguishers.
+		if(totalReportCount() != summarizedReportCount())
+			setDistinguisherFlag();
+
+		if(checkDistinguishers() == true)
+			setDistinguisherFlag();
+	}
+
+	// For instances' bespoke distinguisher checks.
+	// Should return true if the distinguisher flag should be set,
+	// nil otherwise.
+	checkDistinguishers() { return(nil); }
+
 	// Handle summarizing the reports passed to us in the vector.
 	summarizeReports(vec) {
 		local d, txt, l;
 
-		// If all the reports for the current action aren't being
-		// summarized then we need to add object distinguishers.
-		_distinguisherFlag
-			= (totalReportCount() != summarizedReportCount());
+		_checkDistinguishers();
 
 		// Create a string buffer to hold the summary.
 		txt = new StringBuffer();
@@ -365,7 +379,7 @@ class ReportManager: ReportManagerObject
 		});
 
 		if(vv.length > 1)
-			_distinguisherFlag = true;
+			setDistinguisherFlag();
 
 		return(vv);
 	}
@@ -411,44 +425,6 @@ class ReportManager: ReportManagerObject
 
 		return(n);
 	}
-
-/*
-	getReportManagerAnnounceText(cfg) {
-		if(reportManagerAnnounceText != nil)
-			return(reportManagerAnnounceText);
-
-		return(cfg.dobj.getBestDistinguisher(
-			gAction.getResolvedObjList(DirectObject))
-			.singlePluralName(cfg.dobj, cfg.count));
-	}
-
-	// Figure out what announcement text to use.
-	// First argument is the StringBuffer we're writing the summary to.
-	// Optional second arg is a vector containing the reports we're
-	// summarizing.
-	reportManagerAnnouncement(cfg, txt) {
-		// If we're summarizing ALL the reports, we don't
-		// need to add an announcement.
-		if(!_distinguisherFlag)
-			return;
-
-		// Add the announcement text.  The format is identical
-		// to libMessages.announceMultiActionObject(), which
-		// is what non-summarized objects would use by default.
-		txt.append('<./p0>\n<.announceObj>' + 
-			getReportManagerAnnounceText(cfg)
-			+ ':<./announceObj> <.p0>');
-	}
-*/
-
-/*
-	_announcementWithPrep(t, obj) {
-		if((obj == nil) || (obj.location == nil))
-			return(t);
-
-		return(obj.location.reportInPrep(t));
-	}
-*/
 
 	// See if we handle the given action type.
 	reportManagerMatchAction(act) {
