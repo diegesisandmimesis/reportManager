@@ -151,7 +151,7 @@ class ReportManager: ReportManagerObject
 
 	// Flag to indicate whether or not we need object distinguisher
 	// announcements.
-	_announceFlag = nil
+	_distinguisherFlag = nil
 
 	// Preinit method.
 	initializeReportManager() {
@@ -243,7 +243,7 @@ class ReportManager: ReportManagerObject
 		}
 
 		// We start out assuming we don't kneed announcements.
-		_announceFlag = nil;
+		_distinguisherFlag = nil;
 
 		// Actually do the summary.
 		//gTranscript.summarizeAction(
@@ -251,9 +251,8 @@ class ReportManager: ReportManagerObject
 		//gTranscript.sortedSummarizeAction(
 		gTranscript.sortedSummarizeAction(
 			function(x) { return(_checkReport(x)); },
-			function(vec) {
-				return(summarizeReports(vec));
-			}
+			function(vec) { return(sortReports(vec)); },
+			function(vec) { return(summarizeReports(vec)); }
 		);
 	}
 
@@ -287,11 +286,12 @@ class ReportManager: ReportManagerObject
 
 	// Handle summarizing the reports passed to us in the vector.
 	summarizeReports(vec) {
-		local txt, l;
+		local d, txt, l;
 
 		// If all the reports for the current action aren't being
 		// summarized then we need to add object distinguishers.
-		_announceFlag = (totalReportCount() != summarizedReportCount());
+		_distinguisherFlag
+			= (totalReportCount() != summarizedReportCount());
 
 		// Create a string buffer to hold the summary.
 		txt = new StringBuffer();
@@ -310,11 +310,58 @@ class ReportManager: ReportManagerObject
 			});
 
 			if(l.length > 0) {
-				s.summarizeByLocation(l, txt);
+				d = new ReportSummaryData(l);
+				formatReport(l, s._summarize(d), txt);
 			}
 		});
 
 		return(toString(txt));
+	}
+
+	// Report sorter.
+	// We accept an unsorted vector of reports, and we return a
+	// a vector of vectors, where each element is a vector of reports
+	// to summarize together.
+	sortReports(vec) {
+		local dist, idx, l, vv;
+
+		l = new Vector(vec.length);
+		vv = new Vector(8);
+
+		vec.forEach(function(o) {
+			dist = getReportDistinguisher(o.dobj_, 1);
+
+			if((idx = l.indexOf(dist)) == nil) {
+				l.appendUnique(dist);
+				vv.append(new Vector());
+				idx = l.length;
+			}
+
+			vv[idx].append(o);
+		});
+
+		if(vv.length > 1)
+			_distinguisherFlag = true;
+
+		return(vv);
+	}
+
+	formatReport(vec, summary, txt) {
+		if(_distinguisherFlag == true) {
+			txt.append('<./p0>\n<.announceObj>');
+			txt.append(getReportDistinguisher(vec[1].dobj_,
+				vec.length));
+			txt.append(':<./announceObj> <.p0>');
+		}
+		txt.append(summary);
+	}
+
+	getReportDistinguisher(obj, n) {
+		if(reportManagerAnnounceText)
+			return(reportManagerAnnounceText);
+		return(obj.getBestDistinguisher(
+			gAction.getResolvedObjList(DirectObject))
+			.singlePluralName(obj, n));
 	}
 
 	// Returns the total number of reports for the current action
@@ -341,6 +388,7 @@ class ReportManager: ReportManagerObject
 		return(n);
 	}
 
+/*
 	getReportManagerAnnounceText(cfg) {
 		if(reportManagerAnnounceText != nil)
 			return(reportManagerAnnounceText);
@@ -357,7 +405,7 @@ class ReportManager: ReportManagerObject
 	reportManagerAnnouncement(cfg, txt) {
 		// If we're summarizing ALL the reports, we don't
 		// need to add an announcement.
-		if(!_announceFlag && !cfg.prep)
+		if(!_distinguisherFlag)
 			return;
 
 		// Add the announcement text.  The format is identical
@@ -367,6 +415,7 @@ class ReportManager: ReportManagerObject
 			getReportManagerAnnounceText(cfg)
 			+ ':<./announceObj> <.p0>');
 	}
+*/
 
 /*
 	_announcementWithPrep(t, obj) {
