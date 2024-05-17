@@ -149,16 +149,8 @@ class ReportManager: ReportManagerObject
 	// List of our summary objects.
 	_reportManagerSummary = perInstance(new Vector())
 
-	// Property to hold the reports for a specific action.  Set
-	// by the summarizeReports() wrapper, we just store this so
-	// we don't have to juggle it as an argument for the summary
-	// methods.
-	_reportManagerReports = nil
-
-	// Used internally to make sure we only summarize things once
-	// per action.
-	_summarizeFlag = nil
-
+	// Flag to indicate whether or not we need object distinguisher
+	// announcements.
 	_announceFlag = nil
 
 	// Preinit method.
@@ -250,44 +242,37 @@ class ReportManager: ReportManagerObject
 			return;
 		}
 
+		// We start out assuming we don't kneed announcements.
 		_announceFlag = nil;
 
-		// Kludge to make sure we only do one summary per action.
-		_summarizeFlag = true;
-
 		// Actually do the summary.
-		gTranscript.summarizeAction(
+		//gTranscript.summarizeAction(
+
+		//gTranscript.sortedSummarizeAction(
+		gTranscript.sortedSummarizeAction(
 			function(x) { return(_checkReport(x)); },
 			function(vec) {
-				// Make sure we're not doing multiple summaries
-				// of the same stuff.  This can happen when
-				// there are a bunch of objects and we're
-				// summarizing ones at the start and end of
-				// the report list.  For example, when we're
-				// summarizing an inventory listing and our
-				// summary applies to items at the start and
-				// end but not the ones in the middle.
-				if(_summarizeFlag != true)
-					return('');
-				_summarizeFlag = nil;
-
 				return(summarizeReports(vec));
 			}
 		);
 	}
 
 	// Wrapper for the main checkReport() method.
+	// This is where we look at a report and decide whether or not
+	// we want to summarize it.
 	_checkReport(report) {
-		if(report.action_ != gAction)
+		if(report.action_ != gAction) {
 			return(nil);
+		}
 
 		// We we're the report manager for a specific object or
 		// class, check to see if our reports to see if they
 		// match it.
 		if(reportManagerFor != nil) {
 			if((report.dobj_ == nil)
-				|| !report.dobj_.ofKind(reportManagerFor))
+				|| !report.dobj_.ofKind(reportManagerFor)) {
 				return(nil);
+			}
 		}
 
 		if(checkReport(report) != true)
@@ -300,21 +285,20 @@ class ReportManager: ReportManagerObject
 	// To be overwritten by instances.
 	checkReport(report) { return(true); }
 
-	setReportVector(v) {
-		_reportManagerReports = v;
-	}
-
-	// Internal wrapper for the main summary method.  We
-	// create a string buffer to hold the summarized action(s),
-	// and then call the "real" method.
+	// Handle summarizing the reports passed to us in the vector.
 	summarizeReports(vec) {
 		local txt, l;
 
-		_announceFlag = (totalReports() != summarizedReports());
-		setReportVector(vec);
+		// If all the reports for the current action aren't being
+		// summarized then we need to add object distinguishers.
+		_announceFlag = (totalReportCount() != summarizedReportCount());
 
+		// Create a string buffer to hold the summary.
 		txt = new StringBuffer();
 
+		// Go through the reports and hand them off to the
+		// individual action summarizers defined on this
+		// report manager.
 		l = new Vector(vec.length);
 		_reportManagerSummary.forEach(function(s) {
 			l.setLength(0);
@@ -325,8 +309,9 @@ class ReportManager: ReportManagerObject
 				l.append(o);
 			});
 
-			if(l.length > 0)
+			if(l.length > 0) {
 				s.summarizeByLocation(l, txt);
+			}
 		});
 
 		return(toString(txt));
@@ -334,13 +319,13 @@ class ReportManager: ReportManagerObject
 
 	// Returns the total number of reports for the current action
 	// (including ones we're not going to summarize).
-	totalReports() {
+	totalReportCount() {
 		return((gAction && gAction.dobjList_)
 			? gAction.dobjList_.length : 0);
 	}
 
 	// Returns the number of reports we're summarizing.
-	summarizedReports() {
+	summarizedReportCount() {
 		local n;
 
 		if((gAction == nil) || (gAction.dobjList_ == nil))
@@ -375,30 +360,6 @@ class ReportManager: ReportManagerObject
 		if(!_announceFlag && !cfg.prep)
 			return;
 
-/*
-//aioSay('\ndistinguisher = <q><<cfg.dobj.getBestDistinguisher(gAction.getResolvedObjList(DirectObject)).name(cfg.dobj)>></q>\n ');
-		if(reportManagerAnnounceText != nil) {
-			// If we have an explicit announcement text defined,
-			// use it.
-			t = reportManagerAnnounceText;
-		} else {
-			// If we don't have an explicit announcement text
-			// defined, we try to get the plural name of the
-			// first object from the reports we're summarizing.
-
-			// No objects, bail.
-			if(cfg.dobj == nil)
-				return;
-
-			// Get the object's plural name.
-			t = cfg.dobj.pluralName;
-		}
-
-		if(cfg.prep == true) {
-			t = _announcementWithPrep(t, cfg.dobj);
-		}
-
-*/
 		// Add the announcement text.  The format is identical
 		// to libMessages.announceMultiActionObject(), which
 		// is what non-summarized objects would use by default.

@@ -26,6 +26,12 @@ modify ReportManagerObject
 ;
 
 modify ReportManager
+	afterActionMain() {
+		_debug('afterActionMain(): <<toString(gTranscript.reports_.length)>> reports');
+		_debugReportVector(gTranscript.reports_);
+		inherited();
+	}
+
 	summarizeReports(vec) {
 		_debug('summarizeReports(): <<toString(vec.length)>> reports');
 		_debugReportVector(vec);

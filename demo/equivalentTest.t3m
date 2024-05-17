@@ -7,4 +7,5 @@
 -lib adv3/adv3
 -lib syslog/syslog
 -lib ../reportManager
+-source src/patch.t
 -source src/equivalentTest.t

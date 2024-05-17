@@ -23,7 +23,8 @@ class ReportSummaryData: object
 		objs = ol;
 		prep = p;
 
-		count = dobj._reportCount;
+		//count = objs.lengt._reportCount;
+		count = objs.length;
 	}
 ;
 
@@ -56,6 +57,28 @@ class ReportSummary: ReportManagerObject
 	// include a prepositional announcement before each summary (indicating
 	// which group of objects each summary applies to:  "pebbles in the
 	// box" versus "pebbles carried by Bob" and so on).
+	summarizeByLocation(vec, txt) {
+		local dobjs, locs;
+
+		dobjs = new Vector(vec.length);
+		locs = new Vector(vec.length);
+
+		if(vec.length < 1)
+			return;
+
+		vec.forEach(function(o) {
+			dobjs.appendUnique(o.dobj_);
+			locs.appendUnique(o.dobj_.location);
+		});
+
+		obj = new ReportSummaryData(vec, dobjs[1],
+			dobjs, (locs.length > 1));
+
+		reportSummaryMessageParams(obj.dobj);
+		reportManager.reportManagerAnnouncement(obj, txt);
+		txt.append(summarize(obj));
+	}
+/*
 	summarizeByLocation(vec, txt) {
 		local dobjs, i, locs, n, obj, oList, vecs;
 
@@ -102,6 +125,7 @@ class ReportSummary: ReportManagerObject
 			txt.append(summarize(obj));
 		}
 	}
+*/
 
 	reportSummaryMessageParams(obj?) {}
 

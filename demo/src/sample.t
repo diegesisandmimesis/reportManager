@@ -36,6 +36,11 @@ ballReportManager: ReportManager
 		return('It\'s <<objectLister.makeSimpleList(data.objs)>>. ');
 	}
 ;
++ReportSummary @LookInAction
+	summarize(data) {
+		return('It\'s <<objectLister.makeSimpleList(data.objs)>>. ');
+	}
+;
 +ReportSummary @SmellAction
 	summarize(data) { return('They all smell the same. '); }
 ;

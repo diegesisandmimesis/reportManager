@@ -15,10 +15,12 @@
 //	https://tads.org/t3doc/doc/techman/t3transcript.htm
 modify CommandReport
 	dobj_ = nil
+	iobj_ = nil
 
 	construct() {
 		inherited();
 		dobj_ = gDobj;
+		iobj_ = gIobj;
 	}
 ;
 
