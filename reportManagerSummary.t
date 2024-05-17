@@ -11,10 +11,14 @@
 class ReportSummaryData: object
 	vec = nil
 	objs = nil
+	dobj = nil
 	count = nil
 
 	construct(v) {
 		vec = v;
+
+		if((v == nil) || (v.length < 1))
+			return;
 
 		objs = new Vector(v.length);
 		vec.forEach(function(o) {
@@ -22,6 +26,12 @@ class ReportSummaryData: object
 		});
 
 		count = objs.length;
+
+		if(objs.length < 1)
+			return;
+
+		dobj = objs[1];
+		dobj._reportCount = count;
 	}
 ;
 
@@ -49,7 +59,7 @@ class ReportSummary: ReportManagerObject
 	}
 
 	_summarize(data) {
-		reportSummaryMessageParams(data.objs[1]);
+		reportSummaryMessageParams(data.dobj);
 		return(summarize(data));
 	}
 

@@ -40,16 +40,10 @@ modify ReportManager
 ;
 
 modify ReportSummary
-	_summarize(vec, txt) {
+	_summarize(vec) {
 		_debug('_summarize(): <<toString(vec.length)>> reports');
 		_debugReportVector(vec);
-		inherited(vec, txt);
-	}
-
-	_summarizeSingle(idx, cfg, txt) {
-		//_debug('_summarizeSingle(): <<toString(vec.length)>> reports');
-		//_debugReportVector(vec);
-		inherited(idx, cfg, txt);
+		inherited(vec);
 	}
 
 	reportSummaryMessageParams(obj?) {

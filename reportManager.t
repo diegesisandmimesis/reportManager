@@ -309,13 +309,37 @@ class ReportManager: ReportManagerObject
 				l.append(o);
 			});
 
-			if(l.length > 0) {
-				d = new ReportSummaryData(l);
-				formatReport(l, s._summarize(d), txt);
-			}
+			if(l.length < 1)
+				return;
+
+			d = new ReportSummaryData(l);
+			tweakReportSummaryData(d);
+			formatReport(l, s._summarize(d), txt);
 		});
 
 		return(toString(txt));
+	}
+
+	// General method to adjust the data object that will be used
+	// for a summary.
+	tweakReportSummaryData(data) {
+		if((data == nil) || !data.ofKind(ReportSummaryData))
+			return;
+
+		if((data.dobj = getReportDobj(data)) != nil)
+			data.dobj._reportCount = data.count;
+	}
+
+	// Basic dobj selecting method.  This assumes that the objects
+	// are equivalent and so any one can be used.  Designed to
+	// be overwritten by instances if something more elaborate
+	// is needed (like using an object that's not even in the
+	// reports).
+	getReportDobj(data) {
+		if((data.objs == nil) || (data.objs.length < 1))
+			return(nil);
+
+		return(data.objs[1]);
 	}
 
 	// Report sorter.
