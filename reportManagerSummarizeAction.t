@@ -82,9 +82,8 @@ modify CommandTranscript
 		return(sVec);
 	}
 
-	// A summarizeAction() variation that groups reports by their
-	// obj distinguisher announcement (the bolded object description
-	// that appears in command reports involving multiple objects).
+	// A summarizeAction() variation that supports an explicit
+	// sorting function to group the reports to be summarized together.
 	sortedSummarizeAction(cond, sortFn, report) {
 		local l, vec, vv;
 
@@ -107,45 +106,5 @@ modify CommandTranscript
 		vv.forEach(function(o) {
 			reports_.append(new MainCommandReport(report(o)));
 		});
-/*
-		// Vector for the distinguishers.
-		l = new Vector(vec.length);
-
-		// Vector of vectors for the reports grouped by distinguisher.
-		vv = new Vector(vec.length);
-
-		// Now we go through our report list...
-		vec.forEach(function(o) {
-			// ...each element is itself a vector of reports,
-			// which we iterate over.
-			o.forEach(function(r) {
-				// Get the distinguisher for this report's
-				// direct object.
-				dist = r.dobj_.getBestDistinguisher(
-					gAction.getResolvedObjList(
-						DirectObject)) .name(r.dobj_);
-
-				// See if we already know this one.  If not,
-				// add it to the list and create a new vector
-				// to hold all the reports matching it.
-				if((idx = l.indexOf(dist)) == nil) {
-					l.appendUnique(dist);
-					vv.append(new Vector());
-					idx = l.length;
-				}
-
-				// Add these reports to the appropriate vector.
-				vv[idx] += r;
-			});
-		});
-
-		// Go through our vector of vectors.  Each element of the
-		// top-level vector is a vector of all the reports for a
-		// particular distinguisher.
-		vv.forEach(function(o) {
-			txt = report(o);
-			reports_.append(new MainCommandReport(txt));
-		});
-*/
 	}
 ;

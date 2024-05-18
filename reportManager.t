@@ -31,7 +31,9 @@
 //	we'll call, unimaginatively, ballReportManager:
 //
 //		// Declare the report manager.
-//		ballReportManager: ReportManager;
+//		ballReportManager: ReportManager
+//			reportManagerFor = Ball
+//		;
 //
 //	Now in the definition of our ball objects, we tell them to use
 //	this report manager:
@@ -50,10 +52,21 @@
 //		action
 //			property defining what Action class it applies to
 //
-//		summarize(vec, txt)
-//			method taking two arguments:  a vector of the
-//			reports being summarized and a StringBuffer to
-//			write the summary to.
+//		summarize(data)
+//			method taking one argument, a data object described
+//			below and returning a single-quoted string (the
+//			summary text)
+//
+//	The data structure used to pass report data to the summary method
+//	is ReportSummaryData, which has the following properties:
+//
+//		vec
+//			a vector containing all the reports
+//		objs
+//			a vector containing the (direct) objects mentioned
+//			in the reports
+//		count
+//			the integer number of objects being summarized
 //
 //	An example:
 //
@@ -68,19 +81,10 @@
 //			action = ExamineAction
 //
 //			// Actually summarize the reports.
-//			summarize(vec, txt) {
-//				local l;
-//
-//				// Make sure we have data to summarize.
-//				// Here we use a convenience method to get
-//				// the objects from the report manager instead
-//				// of digging through the reports ourselves.
-//				if((l = reportManager.getReporObjects()) == nil)
-//					return;
-//
+//			summarize(vec) {
 //				// Use objectLister to make the summary.
-//				txt.append('It\'s
-//					<<objectLister.makeSimpleList(l)>>. ');
+//				return('It\'s <<objectLister
+//					.makeSimpleList(data.objs)>>. ');
 //			}
 //		;
 //

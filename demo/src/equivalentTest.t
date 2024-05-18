@@ -24,19 +24,18 @@
 versionInfo: GameID;
 gameMain: GameMainDef initialPlayerChar = me;
 
-class Pebble: Thing '(small) (round) pebble*pebbles' 'pebble'
-	"A small, round pebble. "
-	isEquivalent = true
-;
-
 pebbleReportManager: ReportManager
 	reportManagerFor = Pebble
 ;
-+ReportSummary
-	action = ExamineAction
++ReportSummary @ExamineAction
 	summarize(data) {
 		return('It\'s <<spellInt(data.count)>> small, round pebbles. ');
 	}
+;
+
+class Pebble: Thing '(small) (round) pebble*pebbles' 'pebble'
+	"A small, round pebble. "
+	isEquivalent = true
 ;
 
 startRoom: Room 'Void' "This is a featureless void.";
