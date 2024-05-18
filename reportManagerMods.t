@@ -17,6 +17,8 @@ modify CommandReport
 	dobj_ = nil
 	iobj_ = nil
 
+	rptSerial_ = nil
+
 	construct() {
 		inherited();
 		dobj_ = gDobj;
@@ -75,7 +77,9 @@ modify Thing
 	// Used mostly to make it easier to compute once and then look
 	// up instead of computing on reference.
 	_reportCount = nil
+;
 
+/*
 	reportInPrep(txt) {
 		return('<<txt>> <<objInPrep>> <<theNameObj>>');
 	}
@@ -92,6 +96,7 @@ modify Room
 		return('<<txt>> on the ground');
 	}
 ;
+*/
 
 
 //

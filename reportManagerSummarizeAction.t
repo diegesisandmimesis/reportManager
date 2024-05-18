@@ -8,6 +8,12 @@
 
 #include "reportManager.h"
 
+class PlaceholderReport: CommandReport
+	serial = nil
+	construct(n) { serial = n; }
+	showMessage() {}
+;
+
 modify CommandTranscript
 	// This is MOSTLY a cut and paste of the stock summarizeAction()
 	// logic.
@@ -70,8 +76,13 @@ modify CommandTranscript
 						}
 					}
 
-					sVec.append([ insIdx,
+					sVec.append([ sVec.length + 1,
 						new Vector(vec) ]);
+					rpt.insertAt(insIdx,
+						new PlaceholderReport(
+							sVec.length));
+					++cnt;
+					++i;
 				}
 				if(vec.length() > 0)
 					vec.removeRange(1, vec.length());
@@ -94,7 +105,10 @@ modify CommandTranscript
 		// Unroll the report vector.
 		l = new Vector();
 		vec.forEach(function(o) {
-			o[2].forEach(function(r) { l.append(r); });
+			o[2].forEach(function(r) {
+				r.rptSerial_ = o[1];
+				l.append(r);
+			});
 		});
 		
 
@@ -105,7 +119,17 @@ modify CommandTranscript
 		// report from each element (which is a vector of
 		// reports, grouped by the sort function).
 		vv.forEach(function(o) {
-			reports_.append(new MainCommandReport(report(o)));
+			local idx, r;
+
+			r = new MainCommandReport(report(o));
+
+			idx = reports_.indexWhich({
+				x: x.serial == o[1].rptSerial_
+			});
+			if(idx != nil)
+				reports_.insertAt(idx, r);
+			else
+				reports_.append(r);
 		});
 	}
 ;
