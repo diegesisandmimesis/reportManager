@@ -119,13 +119,16 @@ modify CommandTranscript
 		// report from each element (which is a vector of
 		// reports, grouped by the sort function).
 		vv.forEach(function(o) {
-			local idx, r;
+			local idx, min, r;
 
 			r = new MainCommandReport(report(o));
 
-			idx = reports_.indexWhich({
-				x: x.serial == o[1].rptSerial_
+			min = o[1].rptSerial_;
+			o.forEach(function(rp) {
+				if(rp.rptSerial_ < min) min = rp.rptSerial_;
 			});
+
+			idx = reports_.indexWhich({ x: x.serial == min });
 			if(idx != nil)
 				reports_.insertAt(idx, r);
 			else
