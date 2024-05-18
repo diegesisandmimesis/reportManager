@@ -70,7 +70,8 @@ modify CommandTranscript
 						}
 					}
 
-					sVec.append(new Vector(vec));
+					sVec.append([ insIdx,
+						new Vector(vec) ]);
 				}
 				if(vec.length() > 0)
 					vec.removeRange(1, vec.length());
@@ -93,7 +94,7 @@ modify CommandTranscript
 		// Unroll the report vector.
 		l = new Vector();
 		vec.forEach(function(o) {
-			o.forEach(function(r) { l.append(r); });
+			o[2].forEach(function(r) { l.append(r); });
 		});
 		
 
