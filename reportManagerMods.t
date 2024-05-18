@@ -98,53 +98,71 @@ modify Room
 // Now we modify the distinguishers.
 // We add an "aOrCountName" method to each, which we use for 
 modify nullDistinguisher
-	aOrCountName(obj, cnt) {
-		return((cnt == 1) ? name(obj) : obj.countName(cnt));
+	aOrCountName(obj, n) {
+		return((n == 1) ? name(obj) : obj.countName(n));
 	}
-	singlePluralName(obj, cnt) {
-		return((cnt == 1) ? name(obj) : obj.pluralName);
+	singlePluralName(obj, n) {
+		return((n == 1) ? name(obj) : obj.pluralName);
+	}
+	reportName(obj, n) {
+		return((n == 1) ? obj.reportName : obj.pluralReportName);
 	}
 ;
 
 modify basicDistinguisher
-	aOrCountName(obj, cnt) {
-		return((cnt == 1) ? name(obj) : obj.countDisambigName(cnt));
+	aOrCountName(obj, n) {
+		return((n == 1) ? name(obj) : obj.countDisambigName(n));
 	}
-	singlePluralName(obj, cnt) {
-		return((cnt == 1) ? name(obj) : obj.pluralName);
+	singlePluralName(obj, n) {
+		return((n == 1) ? name(obj) : obj.pluralName);
+	}
+	reportName(obj, n) {
+		return((n == 1) ? obj.reportName : obj.pluralReportName);
 	}
 ;
 
 modify ownershipDistinguisher
-	aOrCountName(obj, cnt) {
-		return((cnt == 1)
-			? name(obj) : obj.countNameOwnerLoc(cnt, true));
+	aOrCountName(obj, n) {
+		return((n == 1)
+			? name(obj) : obj.countNameOwnerLoc(n, true));
 	}
-	singlePluralName(obj, cnt) {
-		return((cnt == 1) ? name(obj) : obj.pluralNameOwnerLoc(true));
+	singlePluralName(obj, n) {
+		return((n == 1) ? obj.aNameOwnerLoc(true) : obj.pluralNameOwnerLoc(true));
+	}
+	reportName(obj, n) {
+		return((n == 1) ? obj.reportNameOwnerLoc(true) : obj.pluralReportNameOwnerLoc(true));
 	}
 ;
 
 modify locationDistinguisher
-	aOrCountName(obj, cnt) {
-		return((cnt == 1)
-			? name(obj) : obj.countNameOwnerLoc(cnt, nil));
+	aOrCountName(obj, n) {
+		return((n == 1)
+			? name(obj) : obj.countNameOwnerLoc(n, nil));
 	}
-	singlePluralName(obj, cnt) {
-		return((cnt == 1) ? name(obj) : obj.pluralNameOwnerLoc(nil));
+	singlePluralName(obj, n) {
+		return((n == 1) ? obj.aNameOwnerLoc(nil) : obj.pluralNameOwnerLoc(nil));
+	}
+	reportName(obj, n) {
+		return((n == 1) ? obj.reportNameOwnerLoc(nil) : obj.pluralReportNameOwnerLoc(nil));
 	}
 ;
 
 modify litUnlitDistinguisher
-	aOrCountName(obj, cnt) {
-		return((cnt == 1) ? name(obj) : obj.pluralNameLit);
+	aOrCountName(obj, n) {
+		return((n == 1) ? obj.aNameLit : obj.pluralNameLit);
 	}
-	singlePluralName(obj, cnt) {
-		return((cnt == 1) ? name(obj) : obj.pluralNameLit);
+	singlePluralName(obj, n) {
+		return((n == 1) ? obj.aNameLit : obj.pluralNameLit);
+	}
+	reportName(obj, n) {
+		return(singlePluralName(obj, n));
 	}
 ;
 
 modify Thing
+	reportName = name
+	pluralReportName = (pluralNameFrom(reportName))
+
 	pluralNameOwnerLoc(ownerPriority) {
 		local owner;
 
@@ -153,6 +171,28 @@ modify Thing
 			return(owner.theNamePossAdj + ' ' + pluralName);
 		} else {
 			return(location.childInNameWithOwner(pluralName));
+		}
+	}
+
+	reportNameOwnerLoc(ownerPriority) {
+		local owner;
+
+		if(((owner = getNominalOwner()) != nil)
+			&& (ownerPriority || isDirectlyIn(owner))) {
+			return(owner.theNamePossAdj + ' ' + reportName);
+		} else {
+			return(location.childInNameWithOwner(reportName));
+		}
+	}
+
+	pluralReportNameOwnerLoc(ownerPriority) {
+		local owner;
+
+		if(((owner = getNominalOwner()) != nil)
+			&& (ownerPriority || isDirectlyIn(owner))) {
+			return(owner.theNamePossAdj + ' ' + pluralReportName);
+		} else {
+			return(location.childInNameWithOwner(pluralReportName));
 		}
 	}
 ;

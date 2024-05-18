@@ -28,7 +28,7 @@ gameMain: GameMainDef initialPlayerChar = me;
 // the balls.
 ballReportManager: ReportManager
 	reportManagerFor = Ball
-	reportManagerAnnounceText = 'balls'
+	//reportManagerAnnounceText = 'balls'
 ;
 +ReportSummary @ExamineAction
 	// Summarize the examines.
@@ -46,7 +46,7 @@ ballReportManager: ReportManager
 class Ball: Thing 'ball*balls' 'ball'
 	"A <<color>> ball. "
 
-	reportManager = ballReportManager
+	reportName = 'balls'
 
 	// The color property.  Needs to be a single-quoted string.
 	color = nil

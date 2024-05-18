@@ -403,7 +403,7 @@ class ReportManager: ReportManagerObject
 			return(reportManagerAnnounceText);
 		return(obj.getBestDistinguisher(
 			gAction.getResolvedObjList(DirectObject))
-			.singlePluralName(obj, n));
+			.reportName(obj, n));
 	}
 
 	// Returns the total number of reports for the current action
