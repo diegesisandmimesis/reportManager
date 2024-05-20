@@ -79,10 +79,10 @@ class Pebble: Thing '(small) (round) pebble' 'pebble' "A small, round pebble. "
 
 startRoom: Room 'Void' "This is a featureless void.";
 +me: Person;
+// A bunch of flower instances with some other stuff in the middle.
 ++GreenFlower;
 ++Pebble;
 ++RedFlower;
-// A bunch of flower instances with a pebble in the middle.
 +GreenFlower;
 +RedFlower;
 +Pebble;

@@ -169,7 +169,7 @@ class ReportManager: ReportManagerObject
 		if(reportManagerFor == nil)
 			return;
 
-		if(!reportManagerFor.ofKind(Collective))
+		if(!reportManagerFor.ofKind(Collection))
 			reportManagerFor = [ reportManagerFor ];
 
 		reportManagerFor.forEach(function(cls) {
