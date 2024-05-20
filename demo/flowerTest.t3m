@@ -2,10 +2,10 @@
 -D MESSAGESTYLE=neu
 -Fy obj -Fo obj
 -Fs ../..
--o games/ballTest.t3
+-o games/flowerTest.t3
 -lib system
 -lib adv3/adv3
 -lib syslog/syslog
 -lib ../reportManager
--source src/ballTest.t
--source extensions/combineReports.t
+-source src/flowerTest.t
+#-source extensions/combineReports.t

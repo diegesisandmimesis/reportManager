@@ -1,6 +1,6 @@
 #charset "us-ascii"
 //
-// ballTest.t
+// flowerTest.t
 // Version 1.0
 // Copyright 2022 Diegesis & Mimesis
 //
@@ -8,7 +8,7 @@
 //
 // It can be compiled via the included makefile with
 //
-//	# t3make -f ballTest.t3m
+//	# t3make -f flowerTest.t3m
 //
 // ...or the equivalent, depending on what TADS development environment
 // you're using.
@@ -25,9 +25,9 @@ versionInfo: GameID;
 gameMain: GameMainDef initialPlayerChar = me;
 
 // Our report manager.  All it does is summarize the >EXAMINE command on
-// the balls.
-ballReportManager: ReportManager
-	reportManagerFor = Ball
+// the flowers.
+flowerReportManager: ReportManager
+	reportManagerFor = Flower
 ;
 +ReportSummary @ExamineAction
 	// Summarize the examines.
@@ -42,39 +42,54 @@ ballReportManager: ReportManager
 // A class for the objects we're going to summarize.
 // The only interesting thing about the class is that the objects are
 // identical except for their color.
-class Ball: Thing 'ball*balls' 'ball'
-	"A <<color>> ball. "
-
-	reportName = 'ball'
+class Flower: Thing 'flower*flowers' 'flower'
+	"A <<color>> flower. "
 
 	// The color property.  Needs to be a single-quoted string.
 	color = nil
-	isEquivalent = true
 
-	// Set up each Ball instance at the start of the game.  We need to
+	isEquivalent = true
+	reportName = 'flower'
+
+	// Set up each Flower instance at the start of the game.  We need to
 	// do this to handle the per-color vocabulary.
 	initializeThing() {
-		inherited();
+		// Important:  setColor() has to happen before the rest
+		// 	of initializeThing() OR initializeEquivalent() 
+		//	has to be called after.
 		setColor();
+		inherited();
 	}
 
-	// Tweak the vocabulary to reflect the ball's color.
+	// Tweak the vocabulary to reflect the flower's color.
 	setColor() {
 		if(color == nil)
 			color = 'colorless';
 		cmdDict.addWord(self, color, &adjective);
-		name = '<<color>> ball';
+		name = '<<color>> flower';
 	}
 ;
 
+class RedFlower: Flower color = 'red';
+class BlueFlower: Flower color = 'blue';
+class GreenFlower: Flower color = 'green';
+
+class Pebble: Thing '(small) (round) pebble' 'pebble' "A small, round pebble. "
+	isEquivalent = true;
+
 startRoom: Room 'Void' "This is a featureless void.";
 +me: Person;
-// A bunch of ball instances with a pebble in the middle.
-+redBall: Ball color = 'red';
-+pebble: Thing '(small) (round) pebble' 'pebble' "A small, round pebble. ";
-+greenBall: Ball color = 'green';
+++GreenFlower;
+++Pebble;
+++RedFlower;
+// A bunch of flower instances with a pebble in the middle.
++GreenFlower;
++RedFlower;
++Pebble;
++GreenFlower;
 +box: Container '(wooden) box' 'box' "A wooden box. ";
-++Ball color = 'red';
-++Ball color = 'blue';
-++Ball color = 'red';
-+blueBall: Ball color = 'blue';
+++RedFlower;
+++BlueFlower;
+++RedFlower;
++BlueFlower;
++GreenFlower;

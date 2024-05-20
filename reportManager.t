@@ -169,8 +169,13 @@ class ReportManager: ReportManagerObject
 		if(reportManagerFor == nil)
 			return;
 
-		forEachInstance(reportManagerFor, function(o) {
-			o.reportManager = self;
+		if(!reportManagerFor.ofKind(Collective))
+			reportManagerFor = [ reportManagerFor ];
+
+		reportManagerFor.forEach(function(cls) {
+			forEachInstance(cls, function(o) {
+				o.reportManager = self;
+			});
 		});
 	}
 
@@ -259,6 +264,20 @@ class ReportManager: ReportManagerObject
 
 	setDistinguisherFlag() { _distinguisherFlag = true; }
 
+	checkReportManagerFor(obj) {
+		local i;
+
+		if(obj == nil)
+			return(nil);
+
+		for(i = 1; i <= reportManagerFor.length; i++) {
+			if(obj.ofKind(reportManagerFor[i]))
+				return(true);
+		}
+
+		return(nil);
+	}
+
 	// Wrapper for the main checkReport() method.
 	// This is where we look at a report and decide whether or not
 	// we want to summarize it.
@@ -272,10 +291,10 @@ class ReportManager: ReportManagerObject
 		// class, check to see if our reports to see if they
 		// match it.
 		if(reportManagerFor != nil) {
-			if((report.dobj_ == nil)
-				|| !report.dobj_.ofKind(reportManagerFor)) {
+			if(report.dobj_ == nil)
 				return(nil);
-			}
+			if(!checkReportManagerFor(report.dobj_))
+				return(nil);
 		}
 
 		// Call the "real" method.
