@@ -43,6 +43,7 @@ class ReportSummary: ReportManagerObject
 
 	reportManager = nil
 	isFailure = nil
+	isImplicit = nil
 
 	reportManagerSummaryClass = ReportManagerSummary
 
@@ -97,4 +98,47 @@ class ReportSummary: ReportManagerObject
 
 class FailureSummary: ReportSummary
 	isFailure = true
+;
+
+class ImplicitSummary: ReportSummary
+	isImplicit = true
+
+	matchImplicitReport(report) {
+		if((report == nil)
+			|| !report.ofKind(ImplicitActionAnnouncement))
+			return(nil);
+
+		if(report.isFailure != isFailure)
+			return(nil);
+
+		return(matchAction(report.action_));
+	}
+
+	_summarizeImplicit() {
+		local d, i, idx, r, rSave, txt, v;
+
+		idx = nil;
+		v = new Vector();
+		for(i = 1; i <= gTranscript.reports_.length; i++) {
+			r = gTranscript.reports_[i];
+			if(matchImplicitReport(r)) {
+				if(idx == nil) {
+					idx = i;
+					rSave = r;
+				}
+				v.append(r);
+			}
+		}
+		if(v.length < 2)
+			return;
+
+		d = new ReportSummaryData(v);
+		txt = summarizeImplicit(d);
+		gTranscript.reports_ = gTranscript.reports_.subset(
+			{ rpt: !matchImplicitReport(rpt) }
+		);
+		rSave.messageText_ = '<./p0>\n<.assume><<txt>><./assume>\n';
+		rSave.messageProp_ = nil;
+		gTranscript.reports_.insertAt(idx, rSave);
+	}
 ;

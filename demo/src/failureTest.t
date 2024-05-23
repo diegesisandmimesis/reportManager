@@ -29,7 +29,6 @@ gameMain: GameMainDef initialPlayerChar = me;
 flowerReportManager: ReportManager
 	reportID = 'flowerReportManager'
 	reportManagerFor = Flower
-	active = true
 ;
 +ReportSummary @ExamineAction
 	// Summarize the examines.
@@ -39,7 +38,7 @@ flowerReportManager: ReportManager
 ;
 +ReportSummary @TakeAction
 	summarize(data) {
-		return('Take take take. ');
+		return('You pick <<objectLister.makeSimpleList(data.objs)>>. ');
 	}
 ;
 +FailureSummary @TakeAction

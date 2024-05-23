@@ -39,14 +39,20 @@ modify CommandReport
 	}
 ;
 
+modify Action
+	transcriptManagerAfterActionMain() {
+		if(parentAction != nil)
+			return;
+		transcriptManager.afterActionMain();
+	}
+;
+
 // Modify TAction to check to see if any matching objects have report
 // managers.
 modify TAction
 	afterActionMain() {
 		inherited();
-		if(parentAction == nil) {
-			reportManagerController.afterActionMain();
-		}
+		transcriptManagerAfterActionMain();
 	}
 ;
 
@@ -55,8 +61,7 @@ modify TAction
 modify TIAction
 	afterActionMain() {
 		inherited();
-		if(parentAction == nil)
-			reportManagerController.afterActionMain();
+		transcriptManagerAfterActionMain();
 	}
 ;
 

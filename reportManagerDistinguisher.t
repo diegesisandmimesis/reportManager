@@ -40,23 +40,26 @@ modify ownershipDistinguisher
 			? name(obj) : obj.countNameOwnerLoc(n, true));
 	}
 	singlePluralName(obj, n) {
-		return((n == 1) ? obj.aNameOwnerLoc(true) : obj.pluralNameOwnerLoc(true));
+		return((n == 1) ? obj.aNameOwnerLoc(true)
+			: obj.pluralNameOwnerLoc(true));
 	}
 	reportName(obj, n) {
-		return((n == 1) ? obj.reportNameOwnerLoc(true) : obj.pluralReportNameOwnerLoc(true));
+		return((n == 1) ? obj.reportNameOwnerLoc(true)
+			: obj.pluralReportNameOwnerLoc(true));
 	}
 ;
 
 modify locationDistinguisher
 	aOrCountName(obj, n) {
-		return((n == 1)
-			? name(obj) : obj.countNameOwnerLoc(n, nil));
+		return((n == 1) ? name(obj) : obj.countNameOwnerLoc(n, nil));
 	}
 	singlePluralName(obj, n) {
-		return((n == 1) ? obj.aNameOwnerLoc(nil) : obj.pluralNameOwnerLoc(nil));
+		return((n == 1) ? obj.aNameOwnerLoc(nil)
+			: obj.pluralNameOwnerLoc(nil));
 	}
 	reportName(obj, n) {
-		return((n == 1) ? obj.reportNameOwnerLoc(nil) : obj.pluralReportNameOwnerLoc(nil));
+		return((n == 1) ? obj.reportNameOwnerLoc(nil)
+			: obj.pluralReportNameOwnerLoc(nil));
 	}
 ;
 

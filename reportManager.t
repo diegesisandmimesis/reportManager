@@ -242,40 +242,15 @@ class ReportManager: ReportManagerObject
 
 		// Add it.
 		_reportManagerSummary.appendUnique(obj);
+
 		// Have it remember us.
 		obj.reportManager = self;
 
 		return(true);
 	}
 
-/*
-	// Callback from gAction.
-	// This is where we do most of the work, after action resolution
-	// has finished.
-	reportManagerMain() {
-		if(getActive() != true)
-			return;
-
-		// If we don't have enough reports to summarize, we
-		// have nothing to do.
-		if(gAction.dobjList_.length < minSummaryLength) {
-			return;
-		}
-
-		// We start out assuming we don't need announcements.
-		_distinguisherFlag = nil;
-
-		// Actually do the summary.
-		gTranscript.sortedSummarizeAction(
-			function(x) { return(_checkReport(x)); },
-			function(vec) { return(sortReports(vec)); },
-			function(vec) { return(summarizeReports(vec)); }
-		);
-	}
-*/
-
 	getDistinguisherFlag() {
-		return(reportManagerController._distinguisherFlag == true);
+		return(transcriptManager._distinguisherFlag == true);
 	}
 
 	getReportSummarizer(report) {
@@ -285,6 +260,8 @@ class ReportManager: ReportManagerObject
 			return(nil);
 
 		for(i = 1; i <= _reportManagerSummary.length; i++) {
+			if(_reportManagerSummary[i].isImplicit == true)
+				continue;
 			if(_reportManagerSummary[i].acceptReport(report))
 				return(_reportManagerSummary[i]);
 		}
@@ -352,15 +329,6 @@ class ReportManager: ReportManagerObject
 
 		if(!matchReportFailure(report))
 			return(nil);
-/*
-		if(report.ofKind(ImplicitActionAnnouncement)
-			|| report.ofKind(MultiObjectAnnouncement)
-			|| report.ofKind(DefaultCommandReport)
-			|| report.ofKind(ConvBoundaryReport)
-			|| report.ofKind(ConvBeginReport)
-			|| report.ofKind(ConvEndReport))
-			return(nil);
-*/
 
 		// Call the "real" method.
 		if(checkReport(report) != true)

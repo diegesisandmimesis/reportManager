@@ -1,6 +1,6 @@
 #charset "us-ascii"
 //
-// reportManagerController.t
+// reportManagerTranscriptManager.t
 //
 //	Global report manager singleton.  This handles report summaries
 //	that aren't tied to specific objects/classes.
@@ -12,7 +12,7 @@
 //	and failure reports turned out to be much more straightforward
 //	with a single report management scheme.
 //
-//	Summaries can be added to the reportManagerController singleton,
+//	Summaries can be added to the transcriptManager singleton,
 //	to be applied to objects in general.
 //
 //	Precedence is from specific to general, so any other report
@@ -27,10 +27,21 @@
 
 // Global singleton to handle "generic", non-object-specific report
 // summaries.
-reportManagerController: ReportManager
+transcriptManager: ReportManager
 	reportID = 'reportManager'
 
 	active = true
+
+	reportManagerDefaultSummaries = static [
+		TakeSummary,
+		TakeFromSummary,
+		DropSummary,
+		PutOnSummary,
+		PutInSummary,
+		PutUnderSummary,
+		PutBehindSummary,
+		ImplicitTakeSummary
+	]
 
 	// We match any non-nil object.
 	matchReportDobj(obj) { return(obj != nil); }
@@ -71,6 +82,8 @@ reportManagerController: ReportManager
 		// as a failure.  This will go through and mark all of the
 		// reports associated with a failed action as failed.
 		markFailedReports(gTranscript.reports_);
+
+		summarizeImplicit();
 
 		// Get a vector of vectors of the reports in the transcript.
 		// The return value will be a vector in which each of the
@@ -254,6 +267,14 @@ reportManagerController: ReportManager
 		}
 	}
 
+	summarizeImplicit() {
+		_reportManagerSummary.forEach(function(o) {
+			if(o.isImplicit != true)
+				return;
+			o._summarizeImplicit();
+		});
+	}
+
 	findMultiObjectAnnouncement(lst, idx, dir) {
 		while((idx > 1) && (idx <= lst.length)) {
 			if(lst[idx].ofKind(MultiObjectAnnouncement))
@@ -265,46 +286,4 @@ reportManagerController: ReportManager
 	}
 
 	setDistinguisherFlag() { _distinguisherFlag = true; }
-;
-+ReportSummary @TakeAction
-	summarize(data) {
-		return('{You/He} take{s} <<objectLister
-			.makeSimpleList(data.objs)>>. ');
-	}
-;
-+ReportSummary @TakeFromAction
-	summarize(data) {
-		return('{You/He} take{s} <<objectLister
-			.makeSimpleList(data.objs)>> from <<gIobj.theName>>. ');
-	}
-;
-+ReportSummary @DropAction
-	summarize(data) {
-		return('{You/He} drop{s} <<objectLister
-			.makeSimpleList(data.objs)>>. ');
-	}
-;
-+ReportSummary @PutOnAction
-	summarize(data) {
-		return('{You/He} put{s} <<objectLister
-			.makeSimpleList(data.objs)>> on <<gIobj.theName>>. ');
-	}
-;
-+ReportSummary @PutInAction
-	summarize(data) {
-		return('{You/He} put{s} <<objectLister
-			.makeSimpleList(data.objs)>> in <<gIobj.theName>>. ');
-	}
-;
-+ReportSummary @PutUnderAction
-	summarize(data) {
-		return('{You/He} put{s} <<objectLister
-			.makeSimpleList(data.objs)>> under <<gIobj.theName>>. ');
-	}
-;
-+ReportSummary @PutBehindAction
-	summarize(data) {
-		return('{You/He} put{s} <<objectLister
-			.makeSimpleList(data.objs)>> behind <<gIobj.theName>>. ');
-	}
 ;
