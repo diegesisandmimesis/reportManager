@@ -120,6 +120,8 @@ class ReportManagerObject: Syslog
 class ReportManager: ReportManagerObject
 	reportManagerID = nil
 
+	active = true
+
 	// What kind of object we're a manager for
 	reportManagerFor = nil
 
@@ -157,6 +159,9 @@ class ReportManager: ReportManagerObject
 	// announcements.
 	_distinguisherFlag = nil
 
+	getActive() { return(active == true); }
+	setActive(v) { active = (v ? true : nil); }
+
 	// Preinit method.
 	initializeReportManager() {
 		initializeReportManagerFor();
@@ -166,8 +171,10 @@ class ReportManager: ReportManagerObject
 	// Go through all the objects we're the report manager for and
 	// make sure they know about us.
 	initializeReportManagerFor() {
-		if(reportManagerFor == nil)
+		if(reportManagerFor == nil) {
+			reportManagerFor = [];
 			return;
+		}
 
 		if(!reportManagerFor.ofKind(Collection))
 			reportManagerFor = [ reportManagerFor ];
@@ -241,17 +248,21 @@ class ReportManager: ReportManagerObject
 		return(true);
 	}
 
+/*
 	// Callback from gAction.
 	// This is where we do most of the work, after action resolution
 	// has finished.
-	afterActionMain() {
+	reportManagerMain() {
+		if(getActive() != true)
+			return;
+
 		// If we don't have enough reports to summarize, we
 		// have nothing to do.
 		if(gAction.dobjList_.length < minSummaryLength) {
 			return;
 		}
 
-		// We start out assuming we don't kneed announcements.
+		// We start out assuming we don't need announcements.
 		_distinguisherFlag = nil;
 
 		// Actually do the summary.
@@ -261,10 +272,27 @@ class ReportManager: ReportManagerObject
 			function(vec) { return(summarizeReports(vec)); }
 		);
 	}
+*/
 
-	setDistinguisherFlag() { _distinguisherFlag = true; }
+	getDistinguisherFlag() {
+		return(reportManagerController._distinguisherFlag == true);
+	}
 
-	checkReportManagerFor(obj) {
+	getReportSummarizer(report) {
+		local i;
+
+		if(!matchReportDobj(report.dobj_))
+			return(nil);
+
+		for(i = 1; i <= _reportManagerSummary.length; i++) {
+			if(_reportManagerSummary[i].acceptReport(report))
+				return(_reportManagerSummary[i]);
+		}
+
+		return(nil);
+	}
+
+	matchReportDobj(obj) {
 		local i;
 
 		if(obj == nil)
@@ -278,24 +306,61 @@ class ReportManager: ReportManagerObject
 		return(nil);
 	}
 
+	matchReportAction(act) {
+		local i;
+
+		for(i = 1; i <= _reportManagerSummary.length; i++) {
+			if(_reportManagerSummary[i].matchAction(act) == true)
+				return(true);
+		}
+
+		return(nil);
+	}
+
+	matchReportFailure(report) {
+		local i;
+
+		for(i = 1; i <= _reportManagerSummary.length; i++) {
+			if(_reportManagerSummary[i].isFailure
+				== report.isFailure)
+				return(true);
+		}
+
+		return(nil);
+	}
+
 	// Wrapper for the main checkReport() method.
 	// This is where we look at a report and decide whether or not
 	// we want to summarize it.
 	_checkReport(report) {
 		// Make sure the report is part of the action.
-		if(report.action_ != gAction) {
+		if(report.action_ != gAction)
 			return(nil);
-		}
 
-		// We we're the report manager for a specific object or
-		// class, check to see if our reports to see if they
-		// match it.
-		if(reportManagerFor != nil) {
-			if(report.dobj_ == nil)
-				return(nil);
-			if(!checkReportManagerFor(report.dobj_))
-				return(nil);
-		}
+		if(report.ofKind(ReportManagerSummary))
+			return(nil);
+
+		// See if the report involves a kind of object we're
+		// the report manager for.
+		if(!matchReportDobj(report.dobj_))
+			return(nil);
+
+		// See if we have a summary that matches the action AND
+		// failure status of the report.
+		if(!matchReportAction(report.action_))
+			return(nil);
+
+		if(!matchReportFailure(report))
+			return(nil);
+/*
+		if(report.ofKind(ImplicitActionAnnouncement)
+			|| report.ofKind(MultiObjectAnnouncement)
+			|| report.ofKind(DefaultCommandReport)
+			|| report.ofKind(ConvBoundaryReport)
+			|| report.ofKind(ConvBeginReport)
+			|| report.ofKind(ConvEndReport))
+			return(nil);
+*/
 
 		// Call the "real" method.
 		if(checkReport(report) != true)
@@ -326,6 +391,22 @@ class ReportManager: ReportManagerObject
 
 	// Handle summarizing the reports passed to us in the vector.
 	summarizeReports(vec) {
+		local d, txt, s;
+
+		//_checkDistinguishers();
+
+		// Create a string buffer to hold the summary.
+		txt = new StringBuffer();
+
+		s = vec[1].rptSummarizer_;
+		d = new ReportSummaryData(vec);
+		tweakReportSummaryData(d);
+		formatReport(vec, s._summarize(d), txt);
+
+		return(toString(txt));
+	}
+/*
+	summarizeReports(vec) {
 		local d, txt, l;
 
 		_checkDistinguishers();
@@ -343,6 +424,8 @@ class ReportManager: ReportManagerObject
 			vec.forEach(function(o) {
 				if(!s.matchAction(o.action_))
 					return;
+				if(s.isFailure != o.isFailure)
+					return;
 				l.append(o);
 			});
 
@@ -356,6 +439,7 @@ class ReportManager: ReportManagerObject
 
 		return(toString(txt));
 	}
+*/
 
 	// General method to adjust the data object that will be used
 	// for a summary.
@@ -408,7 +492,7 @@ class ReportManager: ReportManagerObject
 	}
 
 	formatReport(vec, summary, txt) {
-		if(_distinguisherFlag == true) {
+		if(getDistinguisherFlag() == true) {
 			txt.append('<./p0>\n<.announceObj>');
 			txt.append(getReportDistinguisher(vec[1].dobj_,
 				vec.length));

@@ -14,6 +14,8 @@ class PlaceholderReport: CommandReport
 	showMessage() {}
 ;
 
+class ReportManagerSummary: MainCommandReport;
+
 modify CommandTranscript
 	// This is MOSTLY a cut and paste of the stock summarizeAction()
 	// logic.
@@ -94,6 +96,34 @@ modify CommandTranscript
 		return(sVec);
 	}
 
+	_markFailedReports(lst) {
+		local i, j, idx0, idx1;
+
+		for(i = 1; (i != nil) && (i <= lst.length); i++) {
+			if(!lst[i].isFailure)
+				continue;
+
+			idx0 = _findMultiObjectAnnouncement(lst, i, -1);
+			idx0 = (idx0 ? idx0 : 1);
+			idx1 = _findMultiObjectAnnouncement(lst, i, 1);
+			idx1 = (idx1 ? idx1 : lst.length);
+			for(j = idx0; j <= idx1; j++)
+				lst[j].isFailure = true;
+
+			i = idx1;
+		}
+	}
+
+	_findMultiObjectAnnouncement(lst, idx, dir) {
+		while((idx > 1) && (idx <= lst.length)) {
+			if(lst[idx].ofKind(MultiObjectAnnouncement))
+				return(idx);
+			idx += dir;
+		}
+
+		return(nil);
+	}
+
 	// A summarizeAction() variation that supports an explicit
 	// sorting function to group the reports to be summarized together.
 	sortedSummarizeAction(cond, sortFn, report) {
@@ -110,8 +140,9 @@ modify CommandTranscript
 				l.append(r);
 			});
 		});
-		
 
+		_markFailedReports(l);
+		
 		// Get a vector of vectors from the sort function.
 		vv = sortFn(l);
 
@@ -121,7 +152,8 @@ modify CommandTranscript
 		vv.forEach(function(o) {
 			local idx, min, r;
 
-			r = new MainCommandReport(report(o));
+			r = new ReportManagerSummary(report(o));
+			r.isFailure = o[1].isFailure;
 
 			min = o[1].rptSerial_;
 			o.forEach(function(rp) {

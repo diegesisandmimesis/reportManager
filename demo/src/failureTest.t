@@ -1,6 +1,6 @@
 #charset "us-ascii"
 //
-// flowerTest.t
+// failureTest.t
 // Version 1.0
 // Copyright 2022 Diegesis & Mimesis
 //
@@ -8,7 +8,7 @@
 //
 // It can be compiled via the included makefile with
 //
-//	# t3make -f flowerTest.t3m
+//	# t3make -f failureTest.t3m
 //
 // ...or the equivalent, depending on what TADS development environment
 // you're using.
@@ -27,7 +27,9 @@ gameMain: GameMainDef initialPlayerChar = me;
 // Our report manager.  All it does is summarize the >EXAMINE command on
 // the flowers.
 flowerReportManager: ReportManager
+	reportID = 'flowerReportManager'
 	reportManagerFor = Flower
+	active = true
 ;
 +ReportSummary @ExamineAction
 	// Summarize the examines.
@@ -35,14 +37,22 @@ flowerReportManager: ReportManager
 		return('It\'s <<objectLister.makeSimpleList(data.objs)>>. ');
 	}
 ;
-+ReportSummary @SmellAction
-	summarize(data) { return('They all smell the same. '); }
++ReportSummary @TakeAction
+	summarize(data) {
+		return('Take take take. ');
+	}
+;
++FailureSummary @TakeAction
+	summarize(data) {
+		return('You can\'t pick <<objectLister
+			.makeSimpleList(data.objs)>>. ');
+	}
 ;
 
 // A class for the objects we're going to summarize.
 // The only interesting thing about the class is that the objects are
 // identical except for their color.
-class Flower: Thing 'flower' 'flower'
+class Flower: Thing 'flower*flowers' 'flower'
 	"A <<color>> flower. "
 
 	// The color property.  Needs to be a single-quoted string.
@@ -68,28 +78,45 @@ class Flower: Thing 'flower' 'flower'
 		cmdDict.addWord(self, color, &adjective);
 		name = '<<color>> flower';
 	}
+
+	dobjFor(Take) {
+		verify() {
+			illogical('Please don\'t pick (up) the flowers. ');
+		}
+	}
 ;
 
 class RedFlower: Flower color = 'red';
 class BlueFlower: Flower color = 'blue';
 class GreenFlower: Flower color = 'green';
 
-class Pebble: Thing '(small) (round) pebble' 'pebble' "A small, round pebble. "
+class Pebble: Thing '(small) (round) pebble*pebbles' 'pebble'
+	"A small, round pebble. "
 	isEquivalent = true;
 
 startRoom: Room 'Void' "This is a featureless void.";
 +me: Person;
 // A bunch of flower instances with some other stuff in the middle.
-++GreenFlower;
-++Pebble;
-++RedFlower;
-+GreenFlower;
 +RedFlower;
 +Pebble;
-+GreenFlower;
-+box: Container '(wooden) box' 'box' "A wooden box. ";
-++RedFlower;
-++BlueFlower;
-++RedFlower;
 +BlueFlower;
++Pebble;
 +GreenFlower;
++Container '(wooden) box' 'box' "A wooden box. "
+	dobjFor(Take) {
+		verify() { illogical('{You/He} can\'t take the box. '); }
+	}
+;
+
+
+modify CommandReport
+	_debugReport() {
+		aioSay('\nreport: <<toString(self)>>\n ');
+		aioSay('\n\tisFailure = <<toString(isFailure)>>\n ');
+		aioSay('\n\tdobj_ = <<toString(dobj_ ? dobj_.name : nil)>>\n ');
+		aioSay('\n\taction_ = <<toString(action_)>>\n ');
+		if(messageText_) {
+			aioSay('\n\tmessageText_ = <<toString(messageText_)>>\n ');
+		}
+	}
+;

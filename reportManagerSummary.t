@@ -14,6 +14,9 @@ class ReportSummaryData: object
 	dobj = nil
 	count = nil
 
+	failures = nil
+	failureCount = nil
+
 	construct(v) {
 		vec = v;
 
@@ -39,6 +42,9 @@ class ReportSummary: ReportManagerObject
 	action = nil
 
 	reportManager = nil
+	isFailure = nil
+
+	reportManagerSummaryClass = ReportManagerSummary
 
 	initializeReportSummary() {
 		if(location == nil)
@@ -58,6 +64,16 @@ class ReportSummary: ReportManagerObject
 		return(act.ofKind(action));
 	}
 
+	acceptReport(report) {
+		if(report == nil)
+			return(nil);
+		if(!matchAction(report.action_))
+			return(nil);
+		if(report.isFailure != isFailure)
+			return(nil);
+		return(true);
+	}
+
 	_summarize(data) {
 		reportSummaryMessageParams(data.dobj);
 		return(summarize(data));
@@ -66,4 +82,19 @@ class ReportSummary: ReportManagerObject
 	summarize(data) {}
 
 	reportSummaryMessageParams(obj?) {}
+
+	summarizeReports(vec) {
+		local txt;
+
+		if(reportManager != nil)
+			txt = reportManager.summarizeReports(vec);
+		else
+			txt = '';
+
+		return(reportManagerSummaryClass.createInstance(txt));
+	}
+;
+
+class FailureSummary: ReportSummary
+	isFailure = true
 ;
