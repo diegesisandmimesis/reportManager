@@ -2,6 +2,7 @@
 //
 // reportManagerReportName.t
 //
+//	Additional methods on Thing for report-specific distinguishers.
 //
 #include <adv3.h>
 #include <en_us.h>

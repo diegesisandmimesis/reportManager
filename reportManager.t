@@ -112,9 +112,15 @@ reportManagerModuleID: ModuleID {
         listingOrder = 99
 }
 
-class ReportManagerObject: Syslog
-	syslogID = 'ReportManager'
+class ReportManagerObject: Syslog syslogID = 'ReportManager';
+
+class PlaceholderReport: CommandReport
+        reportID = nil
+        construct(n) { reportID = n; }
+        showMessage() {}
 ;
+
+class ReportManagerSummary: MainCommandReport;
 
 // The report manager object.
 class ReportManager: ReportManagerObject
@@ -366,7 +372,7 @@ class ReportManager: ReportManagerObject
 		// Create a string buffer to hold the summary.
 		txt = new StringBuffer();
 
-		s = vec[1].rptSummarizer_;
+		s = vec[1].reportSummarizer;
 		d = new ReportSummaryData(vec);
 		tweakReportSummaryData(d);
 		formatReport(vec, s._summarize(d), txt);

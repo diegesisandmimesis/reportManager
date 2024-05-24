@@ -49,14 +49,14 @@ transcriptManager: ReportManager
 	// TAction and TIActions call us from their afterActionMain().  This
 	// is the main external hook for the report manager logic.
 	afterActionMain() {
-		if(!validateReportManager())
+		if(!checkTranscriptManager())
 			return;
-		runReportManager();
+		runTranscriptManager();
 	}
 
 	// See if we should run this turn.  Returns true if we should,
 	// nil otherwise.
-	validateReportManager() {
+	checkTranscriptManager() {
 		// Make sure we're active.
 		if(getActive() != true)
 			return(nil);
@@ -69,19 +69,19 @@ transcriptManager: ReportManager
 	}
 
 	// Main report manager loop.
-	runReportManager() {
-		local i, idx, l, sl, sv, vec, vv;
+	runTranscriptManager() {
+		local i, idx, lst, sl, sv, vec, vv;
 
 		// Start out every turn assuming we don't need to use
 		// distinguishers.
 		_distinguisherFlag = nil;
 
-		// By default a failed action will produce at least two
-		// reports:  one containing the failure message, which will
-		// NOT be marked as a failure; and a "blank" report marked
-		// as a failure.  This will go through and mark all of the
-		// reports associated with a failed action as failed.
-		markFailedReports(gTranscript.reports_);
+		lst = gTranscript.reports_;
+
+		// Run our transcript markers.
+		markTranscript(lst);
+
+		sortTranscript(lst);
 
 		summarizeImplicit();
 
@@ -89,11 +89,7 @@ transcriptManager: ReportManager
 		// The return value will be a vector in which each of the
 		// elements is a vector of contiguous reports matching one
 		// or more of our summary criteria.
-		vec = getReportVector();
-
-		// Flatten out the vector of vectors into a single vector
-		// of reports.
-		l = unrollReportVector(vec);
+		vec = getReportVector(lst);
 
 		// Vector for the summarizer list.
 		sl = new Vector();
@@ -105,15 +101,15 @@ transcriptManager: ReportManager
 
 		// Go through the flattened list of reports and group
 		// them by summarizer.
-		l.forEach(function(o) {
+		vec.forEach(function(o) {
 			// No summarizer, nothing to do.
-			if(o.rptSummarizer_ == nil)
+			if(o.reportSummarizer == nil)
 				return;
 
 			// Maintain a list of summarizers we're using.
-			if((idx = sl.indexOf(o.rptSummarizer_)) == nil) {
+			if((idx = sl.indexOf(o.reportSummarizer)) == nil) {
 				// Add this summarizer to the list.
-				sl.appendUnique(o.rptSummarizer_);
+				sl.appendUnique(o.reportSummarizer);
 
 				// Create a vector to hold reports for
 				// this summarizer.
@@ -158,14 +154,76 @@ transcriptManager: ReportManager
 		}
 	}
 
-	// Returns a vector of vectors of the reports in the transcript.
-	// Each element of the "outer" vector will be a vector of
-	// contiguous reports matching one or more of our reporting
-	// criteria.
-	getReportVector() {
-		return(gTranscript._sortSummarizeAction(function(rpt) {
-			return(checkReport(rpt));
-		}));
+	markTranscript(vec) {}
+	sortTranscript(vec) {}
+
+	defaultCheckReport(report) {
+		return(report.ofKind(ImplicitActionAnnouncement)
+			|| report.ofKind(MultiObjectAnnouncement)
+			|| report.ofKind(DefaultCommandReport)
+			|| report.ofKind(ConvBoundaryReport));
+	}
+
+	getReportVector(lst) {
+		local i, vec;
+
+		vec = new Vector(lst.length);
+
+		lst.forEach(function(o) {
+			if(o.action_ != gAction)
+				return;
+			if(checkReport(o))
+				vec.append(o);
+		});
+
+		for(i = 1; i <= vec.length; i++) {
+			vec[i].reportID = i;
+			removeReports(vec[i]);
+		}
+
+		return(vec);
+	}
+
+	removeReports(report) {
+		local idx, lst, rIdx;
+
+		lst = gTranscript.reports_;
+
+		if((idx = lst.indexOf(report)) == nil)
+			return;
+
+		lst.removeElementAt(idx);
+		rIdx = idx;
+
+		idx -= 1;
+
+		// Skip back past announcements and markers for the report
+		// we just removed.
+		while((idx >= 1) && (lst[idx].ofKind(ImplicitActionAnnouncement)
+			|| lst[idx].ofKind(DefaultCommandReport)
+			|| lst[idx].ofKind(ConvBoundaryReport)))
+			idx -= 1;
+
+		// If the prior report is a multi object announcement for
+		// the object we just removed, remove it as well.
+		if((idx >= 1) && (lst[idx].ofKind(MultiObjectAnnouncement))) {
+			lst.removeElementAt(idx);
+			rIdx -= 1;
+
+			// Check to see if what we've removed has resulted
+			// in a conversation end immediately followed by a
+			// conversation begin involving the same actor.  If
+			// so, remove the conversation end markers to turn
+			// it into one continuous conversation.
+			if((idx > 1) && (idx <= lst.length)
+				&& lst[idx].ofKind(ConvBeginReport)
+				&& lst[idx - 1].ofKind(ConvEndReport)
+				&& (lst[idx].actorID == lst[idx - 1].actorID)) {
+				rIdx -= 2;
+			}
+		}
+
+		lst.insertAt(rIdx, new PlaceholderReport(report.reportID));
 	}
 
 	// Figure out who, if anyone, wants to summarize this report.
@@ -187,24 +245,8 @@ transcriptManager: ReportManager
 
 		// Nobody else claimed it, so see if one of our stock
 		// summarizers wants to handle it.
-		return((report.rptSummarizer_ = getReportSummarizer(report))
+		return((report.reportSummarizer = getReportSummarizer(report))
 			!= nil);
-	}
-
-	// Flatten a vector-of-vectors of reports into a single vector.
-	unrollReportVector(vec) {
-		local l;
-
-		l = new Vector();
-
-		vec.forEach(function(o) {
-			o[2].forEach(function(r) {
-				r.rptSerial_ = o[1];
-				l.append(r);
-			});
-		});
-
-		return(l);
 	}
 
 	// Handle a single summary.  Args are the summarizer object
@@ -220,19 +262,19 @@ transcriptManager: ReportManager
 		// Figure out where to insert the summary into the transcript's
 		// list of reports.
 
-		// First, guess the first report's "serial number";
-		min = vec[1].rptSerial_;
+		// First, guess the first report's numeric reportID.
+		min = vec[1].reportID;
 
 		// Now go through the rest of the reports for this summary,
-		// seeing if any has a lower serial number.
+		// seeing if any has a lower ID.
 		vec.forEach(function(rpt) {
-			if(rpt.rptSerial_ < min)
-				min = rpt.rptSerial_;
+			if(rpt.reportID < min)
+				min = rpt.reportID;
 		});
 
 		// Find the index of the report that matches the lowest
 		// serial number from the summary.
-		idx = gTranscript.reports_.indexWhich({ x: x.serial == min });
+		idx = gTranscript.reports_.indexWhich({ x: x.reportID == min });
 
 		// If we found a matching report, insert the summary near
 		// it.  This should place the summary at the same place as
@@ -245,44 +287,12 @@ transcriptManager: ReportManager
 			gTranscript.reports_.append(r);
 	}
 
-	// Go through a list of reports, looking for failures.
-	// When we find one, we look for the multi-object announcement
-	// before and after the failure report and mark all reports
-	// in between as failures.
-	markFailedReports(lst) {
-		local i, j, idx0, idx1;
-
-		for(i = 1; (i != nil) && (i <= lst.length); i++) {
-			if(!lst[i].isFailure)
-				continue;
-
-			idx0 = findMultiObjectAnnouncement(lst, i, -1);
-			idx0 = (idx0 ? idx0 : 1);
-			idx1 = findMultiObjectAnnouncement(lst, i, 1);
-			idx1 = (idx1 ? idx1 : lst.length);
-			for(j = idx0; j <= idx1; j++)
-				lst[j].isFailure = true;
-
-			i = idx1;
-		}
-	}
-
 	summarizeImplicit() {
 		_reportManagerSummary.forEach(function(o) {
 			if(o.isImplicit != true)
 				return;
 			o._summarizeImplicit();
 		});
-	}
-
-	findMultiObjectAnnouncement(lst, idx, dir) {
-		while((idx > 1) && (idx <= lst.length)) {
-			if(lst[idx].ofKind(MultiObjectAnnouncement))
-				return(idx);
-			idx += dir;
-		}
-
-		return(nil);
 	}
 
 	setDistinguisherFlag() { _distinguisherFlag = true; }

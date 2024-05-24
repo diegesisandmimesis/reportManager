@@ -20,5 +20,7 @@ reportManagerPreinit: PreinitObject
 		forEachInstance(ReportManager, function(o) {
 			o.initializeReportManager();
 		});
+
+		transcriptManager.initializeTranscriptManager();
 	}
 ;

@@ -8,4 +8,6 @@ source: reportManagerTranscriptManager.t
 source: reportManagerDistinguisher.t
 source: reportManagerReportName.t
 source: reportManagerDefaultReports.t
+source: reportManagerMarker.t
+source: reportManagerSorter.t
 source: reportManagerDebug.t

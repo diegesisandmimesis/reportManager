@@ -8,5 +8,4 @@
 -lib syslog/syslog
 -lib ../reportManager
 -source src/failureTest.t
-#-source extensions/combineReports.t
 -source reflect.t

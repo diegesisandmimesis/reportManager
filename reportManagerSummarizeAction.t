@@ -8,6 +8,7 @@
 
 #include "reportManager.h"
 
+/*
 class PlaceholderReport: CommandReport
 	serial = nil
 	construct(n) { serial = n; }
@@ -15,6 +16,7 @@ class PlaceholderReport: CommandReport
 ;
 
 class ReportManagerSummary: MainCommandReport;
+*/
 
 modify CommandTranscript
 	// This is MOSTLY a cut and paste of the stock summarizeAction()
@@ -96,6 +98,7 @@ modify CommandTranscript
 		return(sVec);
 	}
 
+/*
 	_markFailedReports(lst) {
 		local i, j, idx0, idx1;
 
@@ -136,7 +139,7 @@ modify CommandTranscript
 		l = new Vector();
 		vec.forEach(function(o) {
 			o[2].forEach(function(r) {
-				r.rptSerial_ = o[1];
+				r.reportID = o[1];
 				l.append(r);
 			});
 		});
@@ -155,16 +158,17 @@ modify CommandTranscript
 			r = new ReportManagerSummary(report(o));
 			r.isFailure = o[1].isFailure;
 
-			min = o[1].rptSerial_;
+			min = o[1].reportID;
 			o.forEach(function(rp) {
-				if(rp.rptSerial_ < min) min = rp.rptSerial_;
+				if(rp.reportID < min) min = rp.reportID;
 			});
 
-			idx = reports_.indexWhich({ x: x.serial == min });
+			idx = reports_.indexWhich({ x: x.reportID == min });
 			if(idx != nil)
 				reports_.insertAt(idx, r);
 			else
 				reports_.append(r);
 		});
 	}
+*/
 ;

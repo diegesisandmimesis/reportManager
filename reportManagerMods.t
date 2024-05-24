@@ -17,8 +17,8 @@ modify CommandReport
 	dobj_ = nil
 	iobj_ = nil
 
-	rptSerial_ = nil
-	rptSummarizer_ = nil
+	reportID = nil
+	reportSummarizer = nil
 
 	construct() {
 		inherited();
@@ -27,15 +27,16 @@ modify CommandReport
 	}
 
 	getReportSummarizer() {
-		if(rptSummarizer_ != nil)
-			return(rptSummarizer_);
+		if(reportSummarizer != nil)
+			return(reportSummarizer);
 
 		if((dobj_ == nil) || (dobj_.reportManager == nil))
 			return(nil);
 
-		rptSummarizer_ = dobj_.reportManager.getReportSummarizer(self);
+		reportSummarizer = dobj_.reportManager
+			.getReportSummarizer(self);
 
-		return(rptSummarizer_);
+		return(reportSummarizer);
 	}
 ;
 

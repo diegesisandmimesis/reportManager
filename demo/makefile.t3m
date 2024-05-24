@@ -8,4 +8,3 @@
 -lib syslog/syslog
 -lib ../reportManager
 -source src/sample.t
--source extensions/combineReports.t
