@@ -25,7 +25,6 @@ class ImplicitSummary: ReportSummary
 	_summarizeImplicit(vec, data, act) {
 		local i, idx, r, txt;
 
-_debugReportVector(data.vec, 'before');
 		if((idx = data.vec.indexWhich({
 			x: x.ofKind(ImplicitActionAnnouncement)
 		})) == nil)
@@ -37,8 +36,6 @@ _debugReportVector(data.vec, 'before');
 			return;
 
 		for(i = 1; i <= data.vec.length; i++) {
-aioSay('\nvec = <<toString(data.vec[i])>>\n ');
-aioSay('\nvec = <<toString(data.vec[i])>>\n ');
 			if(data.vec[i].action_.ofKind(act)) {
 				vec.removeElement(data.vec[i]);
 			}
@@ -50,7 +47,6 @@ aioSay('\nvec = <<toString(data.vec[i])>>\n ');
 		r.messageProp_ = nil;
 
 		vec.insertAt(idx, r);
-_debugReportVector(vec, 'after');
 	}
 ;
 
@@ -156,12 +152,12 @@ modify transcriptManager
 
 		// Make sure we have at least one implicit action.
 		if((idx = getNextImplicitActionAnnouncement(vec)) == nil)
-			return(vec);
+			return;
 
 		if(vec.countWhich({
 			x : x.ofKind(ImplicitActionAnnouncement)
 		}) < 2)
-			return(vec);
+			return;
 
 		// Vector for our implicit actions sorted by action type,
 		// and a vector for the actions.
@@ -177,14 +173,16 @@ modify transcriptManager
 				iv = new Vector(ar[2] - ar[1] + 1).copyFrom(vec,
 					ar[1], 1, ar[2] - ar[1] + 1);
 
-				if((ivIdx = l.indexOf(act)) == nil) {
-					l.appendUnique(act);
-					ivIdx = l.length;
-					v.append(new Vector());
+				if(iv.indexWhich({x: x.isFailure}) == nil) {
+					if((ivIdx = l.indexOf(act)) == nil) {
+						l.appendUnique(act);
+						ivIdx = l.length;
+						v.append(new Vector());
+					}
+					v[ivIdx].appendAll(iv.subset({
+						x: !x.ofKind(PlaceholderReport)
+					}));
 				}
-				v[ivIdx].appendAll(iv.subset({
-					x: !x.ofKind(PlaceholderReport)
-				}));
 
 				idx = ar[2] + 1;
 			}
@@ -205,7 +203,5 @@ modify transcriptManager
 				}
 			}
 		});
-
-		return(vec);
 	}
 ;
