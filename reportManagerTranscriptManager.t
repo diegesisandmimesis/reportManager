@@ -28,7 +28,7 @@
 // Global singleton to handle "generic", non-object-specific report
 // summaries.
 transcriptManager: ReportManager
-	reportID = 'reportManager'
+	reportID = 'transcriptManager'
 
 	active = true
 
@@ -39,9 +39,10 @@ transcriptManager: ReportManager
 		PutOnSummary,
 		PutInSummary,
 		PutUnderSummary,
-		PutBehindSummary,
-		ImplicitTakeSummary
+		PutBehindSummary
 	]
+
+	_transcriptTimestamp = nil
 
 	// We match any non-nil object.
 	matchReportDobj(obj) { return(obj != nil); }
@@ -65,6 +66,9 @@ transcriptManager: ReportManager
 		if(gAction.dobjList_ == nil)
 			return(nil);
 
+		if(_transcriptTimestamp == gTurn)
+			return(nil);
+
 		return(true);
 	}
 
@@ -72,18 +76,26 @@ transcriptManager: ReportManager
 	runTranscriptManager() {
 		local i, idx, lst, sl, sv, vec, vv;
 
+		_transcriptTimestamp = gTurn;
+
 		// Start out every turn assuming we don't need to use
 		// distinguishers.
 		_distinguisherFlag = nil;
 
 		lst = gTranscript.reports_;
 
+		//_debugReportVector(lst, 'before pre-processing', reportID);
+
 		// Run our transcript markers.
 		markTranscript(lst);
 
+		// Run the transcript sorters.
 		sortTranscript(lst);
 
-		summarizeImplicit();
+		// Summarize the implicit actions
+		summarizeImplicit(lst);
+
+		//_debugReportVector(lst, 'after preprocessing', reportID);
 
 		// Get a vector of vectors of the reports in the transcript.
 		// The return value will be a vector in which each of the
@@ -153,9 +165,6 @@ transcriptManager: ReportManager
 			});
 		}
 	}
-
-	markTranscript(vec) {}
-	sortTranscript(vec) {}
 
 	defaultCheckReport(report) {
 		return(report.ofKind(ImplicitActionAnnouncement)
@@ -236,6 +245,9 @@ transcriptManager: ReportManager
 		if(report.ofKind(ReportManagerSummary))
 			return(nil);
 
+		if(report.ofKind(PlaceholderReport))
+			return(nil);
+
 		// See if the report can figure out who wants to summarize
 		// it.  This will ping the report's dobj's report manager,
 		// if there is one.
@@ -287,13 +299,9 @@ transcriptManager: ReportManager
 			gTranscript.reports_.append(r);
 	}
 
-	summarizeImplicit() {
-		_reportManagerSummary.forEach(function(o) {
-			if(o.isImplicit != true)
-				return;
-			o._summarizeImplicit();
-		});
-	}
-
 	setDistinguisherFlag() { _distinguisherFlag = true; }
+
+	markTranscript(vec) {}
+	sortTranscript(vec) {}
+	summarizeImplicit(vec) {}
 ;

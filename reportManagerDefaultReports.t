@@ -10,11 +10,22 @@
 
 #include "reportManager.h"
 
-equivalentLister: SimpleLister
+class EquivalentLister: SimpleLister
 	showListItem(obj, options, pov, infoTab) {
 		say(obj.isEquivalent ? obj.aName : obj.theName);
 	}
 ;
+
+class OrLister: SimpleLister
+	listSepTwo = " or "
+	listSepEnd = ", or "
+	longListSepTo = ", or "
+	longListSepEnd = "; or "
+;
+
+equivalentLister: EquivalentLister;
+
+equivalentOrLister: EquivalentLister, OrLister;
 
 class TakeSummary: ReportSummary
 	action = TakeAction
@@ -80,7 +91,7 @@ class PutBehindSummary: ReportSummary
 			.theName>>. ');
 	}
 ;
-
+/*
 class ImplicitTakeSummary: ImplicitSummary
 	action = TakeAction
 
@@ -89,3 +100,4 @@ class ImplicitTakeSummary: ImplicitSummary
 			.makeSimpleList(data.objs)>>');
 	}
 ;
+*/

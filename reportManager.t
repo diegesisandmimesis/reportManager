@@ -112,7 +112,11 @@ reportManagerModuleID: ModuleID {
         listingOrder = 99
 }
 
-class ReportManagerObject: Syslog syslogID = 'ReportManager';
+class ReportManagerObject: Syslog
+	syslogID = 'ReportManager'
+
+	_debugReportVector(v, l?, f?) {}
+;
 
 class PlaceholderReport: CommandReport
         reportID = nil

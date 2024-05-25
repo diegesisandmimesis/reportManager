@@ -2,6 +2,13 @@
 //
 // reportManagerMarker.t
 //
+//	Logic for transcript markers.  This is for code that traverses
+//	the entire transcript and JUST does markup.  The motivating design
+//	case is the MarkFailuresInTranscript class, which goes through
+//	the transcript and marks reports associated with a failure report
+//	with isFailure = true (by default TADS3 only puts isFailure on
+//	the failure report itself, not the other reports associated with
+//	the same action).
 //
 //
 #include <adv3.h>
@@ -9,7 +16,33 @@
 
 #include "reportManager.h"
 
-class TranscriptMarker: ReportManagerObject
+class TranscriptModifier: ReportManagerObject
+	// Find the first multi-object announcement in the vector (first arg),
+	// starting at the given index (second arg), moving in the given
+	// direction (third arg).  Direction is -1 (backwards) or 1 (forwards).
+	findMultiObjectAnnouncement(vec, idx, dir) {
+		while((idx >= 1) && (idx <= vec.length)) {
+			if(vec[idx].ofKind(MultiObjectAnnouncement))
+				return(idx);
+			idx += dir;
+		}
+
+		return(nil);
+	}
+
+	findMultiObjectAnnouncementEndpoints(vec, idx) {
+		local idx0, idx1;
+
+		idx0 = findMultiObjectAnnouncement(vec, idx, -1);
+		idx0 = (idx0 ? idx0 : 1);
+		idx1 = findMultiObjectAnnouncement(vec, idx, 1);
+		idx1 = (idx1 ? idx1 - 1: vec.length);
+
+		return([ idx0, idx1 ]);
+	}
+;
+
+class TranscriptMarker: TranscriptModifier
 	initializeTranscriptMarker() {
 		if(location == nil)
 			return(nil);
@@ -22,19 +55,6 @@ class TranscriptMarker: ReportManagerObject
 	}
 
 	markReports(vec) {}
-
-	// Find the first multi-object announcement in the vector (first arg),
-	// starting at the given index (second arg), moving in the given
-	// direction (third arg).  Direction is -1 (backwards) or 1 (forwards).
-	findMultiObjectAnnouncement(vec, idx, dir) {
-		while((idx > 1) && (idx <= vec.length)) {
-			if(vec[idx].ofKind(MultiObjectAnnouncement))
-				return(idx);
-			idx += dir;
-		}
-
-		return(nil);
-	}
 ;
 
 // Go through a list of reports, looking for failures.
@@ -43,20 +63,24 @@ class TranscriptMarker: ReportManagerObject
 // in between as failures.
 class MarkFailuresInTranscript: TranscriptMarker
 	markReports(vec) {
-		local i, j, idx0, idx1;
+		local idx, i, j;
+		//local i, j, idx0, idx1;
 
 		for(i = 1; (i != nil) && (i <= vec.length); i++) {
 			if(!vec[i].isFailure)
 				continue;
 
+			idx = findMultiObjectAnnouncementEndpoints(vec, i);
+/*
 			idx0 = findMultiObjectAnnouncement(vec, i, -1);
 			idx0 = (idx0 ? idx0 : 1);
 			idx1 = findMultiObjectAnnouncement(vec, i, 1);
 			idx1 = (idx1 ? idx1 : vec.length);
-			for(j = idx0; j <= idx1; j++)
+*/
+			for(j = idx[1]; j <= idx[2]; j++)
 				vec[j].isFailure = true;
 
-			i = idx1;
+			i = idx[2];
 		}
 	}
 ;
@@ -66,7 +90,7 @@ modify transcriptManager
 	_transcriptMarkers = perInstance(new Vector())
 
 	defaultTranscriptMarkers = static [
-		MarkFailuresInTranscript
+		//MarkFailuresInTranscript
 	]
 
 	initializeTranscriptManager() {

@@ -17,6 +17,10 @@
 	(gIsReport(r) ? (r.dobj_ ? r.dobj_.ofKind(cls) : nil) : nil)
 #define gReportAction(r) (gIsReport(r) ? r.action_ : nil)
 
+#ifndef gTurn
+#define gTurn (libGlobal.totalTurns)
+#endif // gTurn
+
 ReportSummary template @action;
 
 #define REPORT_MANAGER_H

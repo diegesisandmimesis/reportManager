@@ -11,47 +11,28 @@
 #ifdef SYSLOG
 
 modify ReportManagerObject
-	_debugReportVector(v) {
+	_debugReportVector(v, lbl?, flg?) {
 		if(v == nil) return;
-		_debug('report vector:  <<toString(v.length)>> reports');
+		_debug((lbl ? lbl : 'report vector')
+			+ ':  <<toString(v.length)>> reports', flg);
 		v.forEach(function(o) {
-			if(o.dobj_ == nil)
-				_debug('\tdobj = nil\n ');
-			else
-				_debug('\tdobj = <<o.dobj_.name>> @
-					<<o.dobj_.location
-					? o.dobj_.location.name : 'nowhere'>>');
+			o._debugReport(flg);
 		});
 	}
 ;
 
-modify ReportManager
-	afterActionMain() {
-		_debug('afterActionMain(): <<toString(gTranscript.reports_.length)>> reports');
-		_debugReportVector(gTranscript.reports_);
-		inherited();
-	}
-
-	summarizeReports(vec) {
-		_debug('summarizeReports(): <<toString(vec.length)>> reports');
-		_debugReportVector(vec);
-		return(inherited(vec));
-	}
-;
-
-modify ReportSummary
-	_summarize(vec) {
-		_debug('_summarize(): <<toString(vec.length)>> reports');
-		_debugReportVector(vec);
-		inherited(vec);
-	}
-
-	reportSummaryMessageParams(obj?) {
-		_debug('reportSummaryMessageParams()');
-		_debug('\tresource = <<obj.name>>');
-		_debug('\tlocation = <<obj.location.name>>');
-		_debug('\tcount = <<toString(obj._reportCount)>>');
-		inherited(obj);
+modify CommandReport
+	_debug(msg, flg?) { transcriptManager._debug(msg, flg); }
+	_debugReport(flg?) {
+		_debug('\t<<toString(self)>>', flg);
+		_debug('\t\taction = <<toString(action_)>>', flg);
+		_debug('\t\tisFailure = <<toString(isFailure)>>', flg);
+		if(dobj_ == nil)
+			_debug('\t\tdobj = nil', flg);
+		else
+			_debug('\t\tdobj = <<toString(dobj_.name)>>
+				@ <<toString(dobj_.location
+					? dobj_.location.name : nil)>>', flg);
 	}
 ;
 

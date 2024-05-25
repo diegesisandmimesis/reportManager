@@ -34,7 +34,8 @@ class ReportSummaryData: object
 			return;
 
 		dobj = objs[1];
-		dobj._reportCount = count;
+		if(dobj)
+			dobj._reportCount = count;
 	}
 ;
 
@@ -100,6 +101,7 @@ class FailureSummary: ReportSummary
 	isFailure = true
 ;
 
+/*
 class ImplicitSummary: ReportSummary
 	isImplicit = true
 
@@ -142,3 +144,4 @@ class ImplicitSummary: ReportSummary
 		gTranscript.reports_.insertAt(idx, rSave);
 	}
 ;
+*/

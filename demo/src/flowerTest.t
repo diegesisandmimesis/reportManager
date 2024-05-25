@@ -42,7 +42,7 @@ flowerReportManager: ReportManager
 // A class for the objects we're going to summarize.
 // The only interesting thing about the class is that the objects are
 // identical except for their color.
-class Flower: Thing 'flower' 'flower'
+class Flower: Thing 'flower*flowers' 'flower'
 	"A <<color>> flower. "
 
 	// The color property.  Needs to be a single-quoted string.
@@ -74,7 +74,8 @@ class RedFlower: Flower color = 'red';
 class BlueFlower: Flower color = 'blue';
 class GreenFlower: Flower color = 'green';
 
-class Pebble: Thing '(small) (round) pebble' 'pebble' "A small, round pebble. "
+class Pebble: Thing '(small) (round) pebble*pebbles' 'pebble'
+	"A small, round pebble. "
 	isEquivalent = true;
 
 startRoom: Room 'Void' "This is a featureless void.";

@@ -42,9 +42,9 @@ modify CommandReport
 
 modify Action
 	transcriptManagerAfterActionMain() {
-		if(parentAction != nil)
-			return;
-		transcriptManager.afterActionMain();
+		if(parentAction == nil) {
+			transcriptManager.afterActionMain();
+		}
 	}
 ;
 

@@ -33,17 +33,19 @@ flowerReportManager: ReportManager
 +ReportSummary @ExamineAction
 	// Summarize the examines.
 	summarize(data) {
-		return('It\'s <<objectLister.makeSimpleList(data.objs)>>. ');
+		return('It\'s <<equivalentLister
+			.makeSimpleList(data.objs)>>. ');
 	}
 ;
 +ReportSummary @TakeAction
 	summarize(data) {
-		return('You pick <<objectLister.makeSimpleList(data.objs)>>. ');
+		return('You pick <<equivalentLister
+			.makeSimpleList(data.objs)>>. ');
 	}
 ;
 +FailureSummary @TakeAction
 	summarize(data) {
-		return('You can\'t pick <<objectLister
+		return('You can\'t pick <<equivalentOrLister
 			.makeSimpleList(data.objs)>>. ');
 	}
 ;
@@ -80,7 +82,7 @@ class Flower: Thing 'flower*flowers' 'flower'
 
 	dobjFor(Take) {
 		verify() {
-			illogical('Please don\'t pick (up) the flowers. ');
+			illogical('{You/He} can\'t pick the flowers. ');
 		}
 	}
 ;
@@ -107,15 +109,6 @@ startRoom: Room 'Void' "This is a featureless void.";
 	}
 ;
 
-
-modify CommandReport
-	_debugReport() {
-		aioSay('\nreport: <<toString(self)>>\n ');
-		aioSay('\n\tisFailure = <<toString(isFailure)>>\n ');
-		aioSay('\n\tdobj_ = <<toString(dobj_ ? dobj_.name : nil)>>\n ');
-		aioSay('\n\taction_ = <<toString(action_)>>\n ');
-		if(messageText_) {
-			aioSay('\n\tmessageText_ = <<toString(messageText_)>>\n ');
-		}
-	}
+modify syslog
+	initFlags = 'summarizeImplicit'
 ;
